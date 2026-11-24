@@ -9,6 +9,15 @@ returns and payments go to the accountant as one file.
 **Status:** early. The modules below work and are tested, but no company runs its business on it
 yet. Expect changes.
 
+![The dashboard: sales today and this month, debts, 30 days of sales, tasks due, stock running low](.github/screenshots/dashboard.jpg)
+
+| | |
+|---|---|
+| ![An order with its lines, discounts, VAT and history](.github/screenshots/order.jpg) An order | ![Debts per customer with overdue amounts](.github/screenshots/debts.jpg) Debts |
+| ![The task board with the company's own columns](.github/screenshots/tasks.jpg) Tasks | ![The customer list in the light look](.github/screenshots/customers-light.jpg) Customers, in the light look |
+
+The screens show a made-up demo company.
+
 ## What it does
 
 - **Customers:** search across Latin and Cyrillic spellings, duplicate warnings, contacts, notes and
