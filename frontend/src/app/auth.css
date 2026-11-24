@@ -1,0 +1,203 @@
+/* The login box's icon pops in when it switches between phone, @ and person. */
+.auth-kind {
+  animation: auth-kind 260ms var(--spring);
+}
+@keyframes auth-kind {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-kind {
+    animation: none;
+  }
+}
+
+/* Headline word that rolls through savdo, ombor, qarzlar, mijozlar. */
+.auth-word {
+  display: inline-block;
+}
+.auth-word-in,
+.auth-word-static {
+  display: inline-block;
+  background: linear-gradient(100deg, var(--accent), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.auth-word-in {
+  animation: auth-word 650ms var(--spring) both;
+}
+@keyframes auth-word {
+  from {
+    opacity: 0;
+    transform: translateY(0.45em);
+    filter: blur(8px);
+  }
+}
+
+/* The banner headline fades in again when the tab or language changes. */
+.auth-fade {
+  animation: auth-fade 450ms var(--ease) both;
+}
+@keyframes auth-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* Two soft colored glows drifting slowly behind everything. */
+.auth-glow {
+  position: fixed;
+  z-index: -1;
+  width: 42vmax;
+  height: 42vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+.auth-glow-a {
+  top: -12vmax;
+  right: -8vmax;
+  background: var(--accent);
+  animation: auth-drift 18s ease-in-out infinite alternate;
+}
+.auth-glow-b {
+  bottom: -16vmax;
+  left: -10vmax;
+  background: var(--violet);
+  animation: auth-drift 23s ease-in-out infinite alternate-reverse;
+}
+[data-look='light'] .auth-glow,
+[data-look='plain'] .auth-glow {
+  opacity: 0.18;
+}
+@keyframes auth-drift {
+  to {
+    transform: translate(-6vmax, 5vmax) scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-word-in,
+  .auth-fade,
+  .auth-glow {
+    animation: none;
+  }
+}
+
+/* The banner: a fine dot grid over two colored glows, and a band of light sweeping across now and
+   then. The two colors follow the time of day; the sign-up tab swaps them. Changes fade over 0.8s. */
+@property --hero-a {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+@property --hero-b {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: transparent;
+}
+.auth-hero {
+  --hero-a: var(--accent);
+  --hero-b: var(--violet);
+  border-bottom: 1px solid var(--line);
+  transition: --hero-a 0.8s var(--ease), --hero-b 0.8s var(--ease);
+}
+.auth-hero[data-phase='morning'] {
+  --hero-a: var(--amber);
+  --hero-b: var(--gold);
+}
+.auth-hero[data-phase='day'] {
+  --hero-a: var(--accent);
+  --hero-b: var(--green);
+}
+.auth-hero[data-phase='evening'] {
+  --hero-a: var(--violet);
+  --hero-b: var(--amber);
+}
+.auth-hero[data-phase='morning'][data-tab='signup'] {
+  --hero-a: var(--gold);
+  --hero-b: var(--green);
+}
+.auth-hero[data-phase='day'][data-tab='signup'] {
+  --hero-a: var(--green);
+  --hero-b: var(--accent);
+}
+.auth-hero[data-phase='evening'][data-tab='signup'] {
+  --hero-a: var(--amber);
+  --hero-b: var(--violet);
+}
+.auth-hero[data-phase='night'][data-tab='signup'] {
+  --hero-a: var(--violet);
+  --hero-b: var(--accent);
+}
+.auth-dots {
+  background-image:
+    radial-gradient(color-mix(in srgb, var(--text) 18%, transparent) 1px, transparent 1.5px),
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--hero-a) 45%, transparent), transparent 60%),
+    radial-gradient(120% 140% at 100% 100%, color-mix(in srgb, var(--hero-b) 40%, transparent), transparent 60%);
+  background-size: 14px 14px, auto, auto;
+}
+.auth-sweep::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, var(--sheen) 50%, transparent 65%);
+  translate: -100% 0;
+  animation: auth-sweep 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes auth-sweep {
+  0%,
+  60% {
+    translate: -100% 0;
+  }
+  100% {
+    translate: 100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-hero {
+    transition: none;
+  }
+  .auth-sweep::after {
+    animation: none;
+  }
+}
+
+/* ---------- Plain looks: no blur and no photo (they're for cheap phones), so cheap decoration only ---------- */
+.sp[data-look^='plain'] {
+  /* the glows become plain gradients: a blur filter is costly on weak GPUs */
+  & .auth-glow {
+    filter: none;
+    opacity: 0.5;
+  }
+  & .auth-glow-a {
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 45%, transparent), transparent);
+  }
+  & .auth-glow-b {
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--violet) 45%, transparent), transparent);
+  }
+  /* a thin border in the banner's colors, so the card has an edge on the flat page */
+  & .auth-card {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--glass), var(--glass)) padding-box,
+      linear-gradient(140deg, color-mix(in srgb, var(--accent) 60%, transparent), var(--line) 40%, var(--line) 60%, color-mix(in srgb, var(--violet) 60%, transparent)) border-box;
+  }
+}
+/* the banner's dot grid across the whole page, fading out toward the edges; static */
+.auth-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(color-mix(in srgb, var(--text) 16%, transparent) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 50%, black 30%, transparent 100%);
+  pointer-events: none;
+}

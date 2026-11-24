@@ -1,0 +1,78 @@
+# Production: Postgres, the API, and Caddy (HTTPS, the built frontend, /api passed to the API).
+# scripts/server-setup.sh prepares a server once (it writes the .env this file reads);
+# scripts/deploy.sh sends the code and the built frontend (./site) and runs `up -d --build`.
+# Only Caddy is reachable from outside.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: open_erp
+      POSTGRES_PASSWORD: ${DB_OWNER_PASSWORD:?}
+      POSTGRES_DB: open_erp
+      APP_PASSWORD: ${DB_APP_PASSWORD:?}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U open_erp"]
+      interval: 5s
+      retries: 10
+    logging: *logging
+
+  # runs before every start of the API, as the tables' owner; the API itself never has that password
+  migrate:
+    build: .
+    command: sh -c "cd app && alembic upgrade head"
+    environment:
+      MAIN_CONFIG__DB__URL: postgresql+asyncpg://open_erp_app:${DB_APP_PASSWORD}@db:5432/open_erp
+      MAIN_CONFIG__DB__MIGRATION_URL: postgresql+asyncpg://open_erp:${DB_OWNER_PASSWORD}@db:5432/open_erp
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      MAIN_CONFIG__DB__URL: postgresql+asyncpg://open_erp_app:${DB_APP_PASSWORD}@db:5432/open_erp
+      # the demo company's password, for `run --rm api python -m app.scripts.seed_demo`
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    logging: *logging
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?}
+      # none set: a name that resolves nowhere, over plain HTTP so no certificate is asked for
+      REDIRECT_ADDRESSES: ${REDIRECT_ADDRESSES:-http://none.invalid}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv/site:ro
+      # the HTTPS certificates: losing this volume means asking for new ones
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+    logging: *logging
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,32 @@
+# Development services. `docker compose up -d` starts Postgres;
+# `docker compose --profile tracing up -d` also starts Jaeger (UI on http://localhost:16686).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: open_erp
+      POSTGRES_PASSWORD: open_erp
+      POSTGRES_DB: open_erp
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # creates the app role on first start; an older volume needs `docker compose down -v`
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U open_erp"]
+      interval: 5s
+      retries: 10
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    profiles: [tracing]
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+volumes:
+  db-data:

@@ -1,0 +1,246 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* shadcn components (src/components/ui) read these names. They point at the look tokens below,
+   so every look restyles them. Glass and Plain dark count as dark for their dark: classes. */
+@custom-variant dark (&:where([data-look='glass'] *, [data-look='plain-dark'] *));
+
+@theme inline {
+  --font-sans: 'Onest', system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: var(--radius);
+  --color-background: var(--glass-strong);
+  --color-foreground: var(--text);
+  --color-card: var(--glass);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--glass-strong);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--soft-2);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--soft);
+  --color-muted-foreground: var(--text-3);
+  --color-accent: var(--soft-2);
+  --color-accent-foreground: var(--text);
+  --color-destructive: var(--red);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--accent);
+  --color-green: var(--green);
+  --color-amber: var(--amber);
+  --color-red: var(--red);
+}
+
+/* The app theme: Glass. Dark frosted panels over a room scene, blue accent, springy motion.
+   Components use these variables only, never hardcoded colors. */
+
+:root {
+  color-scheme: dark;
+  --glass: rgb(46 40 36 / 0.42);
+  --glass-strong: rgb(36 31 28 / 0.6);
+  --glass-hover: rgb(60 53 48 / 0.5);
+  --line: rgb(255 255 255 / 0.16);
+  --line-top: rgb(255 255 255 / 0.3);
+  --soft: rgb(255 255 255 / 0.08);
+  --soft-2: rgb(255 255 255 / 0.14);
+  --text: #ffffff;
+  --text-2: rgb(255 255 255 / 0.74);
+  --text-3: rgb(255 255 255 / 0.55);
+  --accent: #4d8dff;
+  --on-accent: #ffffff;
+  --blue: #6aa5ff;
+  --green: #4ade80;
+  --amber: #f5b946;
+  --violet: #b197fc;
+  --red: #f87171;
+  --gold: #e3b553;
+  --radius: 26px;
+  --blur: blur(26px) saturate(150%);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --spring: cubic-bezier(0.34, 1.35, 0.64, 1);
+
+  /* Depth for components: a light top edge, drop shadows, the accent glow, the selected pill. */
+  --shine: inset 0 1px 0 rgb(255 255 255 / 0.16);
+  --sheen: rgb(255 255 255 / 0.22);
+  --lift: 0 8px 20px -10px rgb(0 0 0 / 0.55);
+  --pop-shadow: 0 24px 48px -16px rgb(0 0 0 / 0.6);
+  --field-inset: inset 0 1px 3px rgb(0 0 0 / 0.18);
+  --glow: color-mix(in srgb, var(--accent) 70%, transparent);
+  --overlay: rgb(0 0 0 / 0.35);
+  --blur-overlay: blur(8px);
+  --pill: rgb(255 255 255 / 0.22);
+  --pill-line: rgb(255 255 255 / 0.4);
+  --pill-text: var(--text);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  /* Shown only until the scene paints. */
+  background: #17110d;
+  color: var(--text);
+  font-family: 'Onest', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* Glass recipes for the shadcn components, from the prototype's pills and panels.
+   Every value is a look token, so Light and the Plain looks restyle them. */
+
+/* A raised frosted control: outline and secondary buttons. */
+@utility glass-control {
+  background-color: var(--glass);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--line);
+  border-top-color: var(--line-top);
+  box-shadow: var(--shine), var(--lift);
+  &:hover {
+    background-color: var(--glass-hover);
+    translate: 0 -1px;
+  }
+}
+
+/* A solid colored button with a light sheen, a glow, and a light sweep on hover.
+   The color is --tone (the accent unless set). */
+@utility glass-solid {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--tone, var(--accent));
+  background-image: linear-gradient(to bottom, var(--sheen), transparent 70%);
+  border: 1px solid color-mix(in srgb, var(--on-accent) 22%, transparent);
+  box-shadow: var(--shine), 0 8px 22px -8px color-mix(in srgb, var(--tone, var(--accent)) 70%, transparent);
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 30%, var(--sheen) 50%, transparent 70%);
+    translate: -110% 0;
+    transition: translate 0.7s var(--ease);
+  }
+  &:hover {
+    translate: 0 -1px;
+    box-shadow: var(--shine), 0 12px 28px -8px color-mix(in srgb, var(--tone, var(--accent)) 80%, transparent);
+  }
+  &:hover::after {
+    translate: 110% 0;
+  }
+}
+
+/* A sunken field: inputs, textareas, select triggers, the tabs track. */
+@utility glass-field {
+  background-color: var(--soft);
+  border: 1px solid var(--line);
+  box-shadow: var(--field-inset);
+  &:hover {
+    background-color: var(--soft-2);
+  }
+}
+
+/* A floating frosted surface: dialogs, menus, popovers, tooltips. */
+@utility glass-pop {
+  background-color: var(--glass-strong);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--line);
+  border-top-color: var(--line-top);
+  box-shadow: var(--shine), var(--pop-shadow);
+}
+
+/* Tailwind borders default to the text color; shadcn components expect the theme's line color.
+   Scoped to them (data-slot), so the prototype's own borders are untouched. */
+@layer base {
+  :where([data-slot], [data-slot] *) {
+    border-color: var(--line);
+    outline-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+}
+
+/* ---------- Motion for shadcn components ---------- */
+/* Popups open with the spring, growing from their trigger (Radix sets the origin), and close quickly.
+   tw-animate-css reads these variables. */
+:is(
+    [data-slot='dialog-content'],
+    [data-slot='popover-content'],
+    [data-slot='dropdown-menu-content'],
+    [data-slot='dropdown-menu-sub-content'],
+    [data-slot='select-content'],
+    [data-slot='tooltip-content']
+  ) {
+  --tw-ease: var(--spring);
+  --tw-animation-duration: 260ms;
+}
+:is(
+    [data-slot='dialog-content'],
+    [data-slot='popover-content'],
+    [data-slot='dropdown-menu-content'],
+    [data-slot='dropdown-menu-sub-content'],
+    [data-slot='select-content'],
+    [data-slot='tooltip-content']
+  )[data-state='closed'] {
+  --tw-ease: ease-in;
+  --tw-animation-duration: 120ms;
+}
+
+/* The check mark draws itself. */
+[data-slot='checkbox-indicator'] path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: check-draw 0.22s var(--ease) 0.04s forwards;
+}
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-slot], [data-slot] *, [data-slot]::after) {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Menu and select items slide in one after another when the list opens. */
+:is([data-slot='dropdown-menu-content'], [data-slot='select-content'])[data-state='open']
+  :is([data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-label'], [data-slot='select-item']) {
+  animation: item-in 0.28s var(--ease) both;
+}
+:is([data-slot='dropdown-menu-content'], [data-slot='select-content'])[data-state='open']
+  :is([data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-label'], [data-slot='select-item']):nth-child(2) {
+  animation-delay: 25ms;
+}
+:is([data-slot='dropdown-menu-content'], [data-slot='select-content'])[data-state='open']
+  :is([data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-label'], [data-slot='select-item']):nth-child(3) {
+  animation-delay: 50ms;
+}
+:is([data-slot='dropdown-menu-content'], [data-slot='select-content'])[data-state='open']
+  :is([data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-label'], [data-slot='select-item']):nth-child(4) {
+  animation-delay: 75ms;
+}
+:is([data-slot='dropdown-menu-content'], [data-slot='select-content'])[data-state='open']
+  :is([data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-label'], [data-slot='select-item']):nth-child(5) {
+  animation-delay: 100ms;
+}
+:is([data-slot='dropdown-menu-content'], [data-slot='select-content'])[data-state='open']
+  :is([data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-label'], [data-slot='select-item']):nth-child(6) {
+  animation-delay: 125ms;
+}
+:is([data-slot='dropdown-menu-content'], [data-slot='select-content'])[data-state='open']
+  :is([data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-label'], [data-slot='select-item']):nth-child(7) {
+  animation-delay: 150ms;
+}
+:is([data-slot='dropdown-menu-content'], [data-slot='select-content'])[data-state='open']
+  :is([data-slot='dropdown-menu-item'], [data-slot='dropdown-menu-label'], [data-slot='select-item']):nth-child(8) {
+  animation-delay: 175ms;
+}
+@keyframes item-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}

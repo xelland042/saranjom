@@ -1,0 +1,7 @@
+# the image needs only the backend: everything else (the server's .env and built site too) stays out
+*
+!pyproject.toml
+!poetry.lock
+!app
+app/tests
+**/__pycache__

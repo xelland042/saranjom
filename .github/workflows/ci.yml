@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17
+        env:
+          POSTGRES_USER: open_erp
+          POSTGRES_PASSWORD: open_erp
+          POSTGRES_DB: open_erp
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U open_erp"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      MAIN_CONFIG__DB__URL: postgresql+asyncpg://open_erp_app:open_erp_app@localhost:5432/open_erp
+      MAIN_CONFIG__DB__MIGRATION_URL: postgresql+asyncpg://open_erp:open_erp@localhost:5432/open_erp
+      TEST_DATABASE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install poetry
+      - run: poetry install --no-root
+      - name: Formatting
+        run: poetry run black --check app
+      - name: Lint (unused imports, undefined names, likely bugs)
+        run: poetry run ruff check app
+      - name: Create the app role
+        run: psql postgresql://open_erp:open_erp@localhost:5432/open_erp -f docker/postgres-init.sql
+      - name: Migrations apply, and match the models
+        working-directory: app
+        run: poetry run alembic upgrade head && poetry run alembic check
+      - name: Tests, with coverage
+        run: poetry run coverage run -m unittest discover -s app/tests -t .
+      # a floor a little under today's 95%: a real drop fails, small refactors don't
+      - name: Coverage
+        run: poetry run coverage report --fail-under=93
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  # the real app in a real browser, against its own API and a fresh database (scripts/e2e.sh)
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17
+        env:
+          POSTGRES_USER: open_erp
+          POSTGRES_PASSWORD: open_erp
+          POSTGRES_DB: open_erp
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U open_erp"
+          --health-interval 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install poetry
+      - run: poetry install --no-root
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - name: Browser
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Create the app role
+        run: psql postgresql://open_erp:open_erp@localhost:5432/open_erp -f docker/postgres-init.sql
+      - name: End-to-end tests
+        run: scripts/e2e.sh
+        env:
+          E2E_PG: localhost:5432
+      # what failed, with a trace to replay it: npx playwright show-trace <trace.zip>
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7

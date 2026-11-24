@@ -1,0 +1,40 @@
+# Caddy gets and renews the HTTPS certificate for this name by itself (ports 80 and 443 open, the
+# name's DNS pointing here).
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		# a demo, not a public site: search engines stay out
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+
+	# Caddy replaces any X-Forwarded-For a visitor sends with their real address
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		root * /srv/site
+		# built files carry a hash in their name, so they never change; the page itself is
+		# checked on every visit, or a deploy would show up late
+		@hashed path /assets/*
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		@page not path /assets/*
+		header @page Cache-Control "no-cache"
+		# the app's own addresses (/customers) are all index.html
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# The other names people may type, sent on to the main one. Each gets its own certificate, so
+# list only names whose DNS points here. A temporary redirect: browsers keep a permanent one
+# for good, which would hurt on the day the main name moves.
+{$REDIRECT_ADDRESSES} {
+	redir https://{$SITE_ADDRESS}{uri}
+}

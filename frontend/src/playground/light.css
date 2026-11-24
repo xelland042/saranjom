@@ -1,0 +1,153 @@
+/* Light look: the light twin of Glass. White frosted panels over a white wallpaper, dark text,
+   black active pills. Scoped to [data-look='light'], so Glass is untouched. Open it at /#light. */
+
+.sp[data-look='light'],
+:root[data-look='light'] {
+  color-scheme: light;
+  /* Panels are a bit whiter than the wallpaper, with a gray edge and soft shadow, so they don't wash out. */
+  --glass: rgb(255 255 255 / 0.55);
+  --glass-strong: rgb(255 255 255 / 0.7);
+  --glass-hover: rgb(255 255 255 / 0.72);
+  --line: rgb(15 23 42 / 0.09);
+  --line-top: rgb(255 255 255 / 0.95);
+  --soft: rgb(15 23 42 / 0.05);
+  --soft-2: rgb(15 23 42 / 0.09);
+  --text: #15171a;
+  --text-2: #464c59;
+  --text-3: #626877;
+  --ink: #15171a;
+  /* Darker steps than Glass, so small colored text passes contrast on white. */
+  --accent: #2563eb;
+  --blue: #2563eb;
+  --green: #15803d;
+  --amber: #b45309;
+  --violet: #6d28d9;
+  --red: #dc2626;
+  --gold: #a16207;
+  --blur: blur(24px) saturate(160%);
+  --shadow: 0 12px 32px -12px rgb(15 23 42 / 0.16), inset 0 1px 0 rgb(255 255 255 / 0.9);
+  --shine: inset 0 1px 0 rgb(255 255 255 / 0.9);
+  --sheen: rgb(255 255 255 / 0.3);
+  --lift: 0 4px 12px -6px rgb(15 23 42 / 0.2);
+  --pop-shadow: 0 24px 48px -16px rgb(15 23 42 / 0.25);
+  --field-inset: inset 0 1px 2px rgb(15 23 42 / 0.06);
+  --overlay: rgb(15 23 42 / 0.16);
+  --pill: var(--ink);
+  --pill-line: transparent;
+  --pill-text: #ffffff;
+
+  /* Shown if the wallpaper file is missing. */
+  background: #e9eaec;
+  color: var(--text);
+}
+.sp[data-look='light'] .sp-photo {
+  background-image: url('/bg/light.jpg');
+}
+
+/* Panels and controls */
+.sp[data-look='light'] .glass {
+  box-shadow: var(--shadow);
+}
+.sp[data-look='light'] .icon-btn,
+.sp[data-look='light'] .pill-btn,
+.sp[data-look='light'] .top-nav button,
+.sp[data-look='light'] .seg {
+  box-shadow: 0 4px 12px -6px rgb(15 23 42 / 0.18), inset 0 1px 0 rgb(255 255 255 / 0.9);
+}
+.sp[data-look='light'] .pill-btn.primary {
+  border-color: transparent;
+  box-shadow: 0 8px 20px -8px rgb(37 99 235 / 0.7);
+}
+.sp[data-look='light'] .pill-btn.primary:hover {
+  background: #1d4ed8;
+}
+.sp[data-look='light'] .pill-btn.primary,
+.sp[data-look='light'] .send,
+.sp[data-look='light'] .chat-meta b {
+  color: #fff;
+}
+.sp[data-look='light'] .avatar,
+.sp[data-look='light'] .avatar i {
+  box-shadow: 0 0 0 2px #fff;
+}
+.sp[data-look='light'] .chip.up {
+  background: rgb(21 128 61 / 0.12);
+}
+.sp[data-look='light'] .chip.down {
+  background: rgb(220 38 38 / 0.1);
+}
+
+/* Active states: black pills with white text */
+.sp[data-look='light'] .seg-ind,
+.sp[data-look='light'] .nav-ind {
+  background: var(--ink);
+  border: 0;
+  box-shadow: 0 6px 16px -4px rgb(15 23 42 / 0.35);
+}
+.sp[data-look='light'] .seg button[aria-pressed='true'],
+.sp[data-look='light'] .top-nav button[data-active='true'] {
+  color: #fff;
+}
+.sp[data-look='light'] .top-nav button[data-active='true'] {
+  border-color: transparent;
+}
+
+/* Dark text needs no shadow; glows are for dark backgrounds */
+.sp[data-look='light'] .page-head h1,
+.sp[data-look='light'] .page-head p {
+  text-shadow: none;
+}
+.sp[data-look='light'] .spark polyline,
+.sp[data-look='light'] .ring .ring-fill {
+  filter: none;
+}
+
+/* Chart */
+.sp[data-look='light'] .chart-grid span::after {
+  border-top-color: var(--line);
+}
+.sp[data-look='light'] .bar-col:not([data-current='true']) .sp-bar {
+  background: linear-gradient(180deg, rgb(15 23 42 / 0.14), rgb(15 23 42 / 0.05));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+.sp[data-look='light'] .bar-col[data-current='true'] .sp-bar {
+  background: linear-gradient(180deg, #5b8def, var(--accent));
+  box-shadow: 0 10px 24px -8px rgb(37 99 235 / 0.6);
+}
+.sp[data-look='light'] .bar-col:hover .sp-bar,
+.sp[data-look='light'] .bar-col:focus-visible .sp-bar {
+  filter: brightness(0.94);
+}
+.sp[data-look='light'] .bar-tip {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* Dividers */
+.sp[data-look='light'] .rows li,
+.sp[data-look='light'] .chat-head,
+.sp[data-look='light'] .saved footer {
+  border-color: var(--line);
+}
+
+/* Messages */
+.sp[data-look='light'] .msg p {
+  background: rgb(255 255 255 / 0.75);
+  box-shadow: 0 2px 8px -4px rgb(15 23 42 / 0.15);
+}
+.sp[data-look='light'] .msg.me p {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 20px -10px rgb(37 99 235 / 0.8);
+}
+.sp[data-look='light'] .composer:focus-within {
+  border-color: var(--accent);
+}
+
+/* Saved: the colored tiles keep white text */
+.sp[data-look='light'] .saved-art {
+  color: #fff;
+}
+.sp[data-look='light'] .saved:hover {
+  box-shadow: 0 20px 40px -14px rgb(15 23 42 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.9);
+}

@@ -1,0 +1,214 @@
+/* Plain looks: the same layout with solid panels, no blur and no wallpaper. Fastest on cheap phones.
+   Plain is light (/#plain), Plain dark is dark (/#plain-dark). Scoped by [data-look], so Glass and Light are untouched. */
+
+/* ---------- Shared by both Plain looks ---------- */
+.sp:is([data-look='plain'], [data-look='plain-dark']),
+:root:is([data-look='plain'], [data-look='plain-dark']) {
+  --blur: none;
+  --blur-overlay: none;
+  --shine: 0 0 #0000;
+  --sheen: transparent;
+}
+.sp:is([data-look='plain'], [data-look='plain-dark']) .page-head h1,
+.sp:is([data-look='plain'], [data-look='plain-dark']) .page-head p {
+  text-shadow: none;
+}
+.sp:is([data-look='plain'], [data-look='plain-dark']) .spark polyline,
+.sp:is([data-look='plain'], [data-look='plain-dark']) .ring .ring-fill {
+  filter: none;
+}
+
+/* ---------- Plain (light) ---------- */
+.sp[data-look='plain'],
+:root[data-look='plain'] {
+  color-scheme: light;
+  --glass: #ffffff;
+  --glass-strong: #ffffff;
+  --glass-hover: #f8f9fb;
+  --line: #e4e7ec;
+  --line-top: #e4e7ec;
+  --soft: #f2f4f7;
+  --soft-2: #e8ebf0;
+  --text: #15171a;
+  --text-2: #4b5160;
+  --text-3: #6b7280;
+  --ink: #15171a;
+  /* Darker steps than Glass, so small colored text passes contrast on white. */
+  --accent: #2563eb;
+  --blue: #2563eb;
+  --green: #15803d;
+  --amber: #b45309;
+  --violet: #6d28d9;
+  --red: #dc2626;
+  --gold: #a16207;
+  --shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 4px 16px rgb(16 24 40 / 0.04);
+  --lift: 0 1px 2px rgb(16 24 40 / 0.08);
+  --pop-shadow: 0 16px 36px -12px rgb(16 24 40 / 0.22);
+  --field-inset: inset 0 1px 2px rgb(16 24 40 / 0.05);
+  --overlay: rgb(15 23 42 / 0.3);
+  --pill: var(--ink);
+  --pill-line: transparent;
+  --pill-text: #ffffff;
+
+  background: #eceef1;
+  color: var(--text);
+}
+.sp[data-look='plain'] .glass,
+.sp[data-look='plain'] .sb {
+  box-shadow: var(--shadow);
+}
+.sp[data-look='plain'] .icon-btn,
+.sp[data-look='plain'] .pill-btn,
+.sp[data-look='plain'] .top-nav button {
+  box-shadow: 0 1px 2px rgb(16 24 40 / 0.04);
+}
+.sp[data-look='plain'] .pill-btn.primary {
+  border-color: transparent;
+  box-shadow: 0 6px 16px -6px rgb(37 99 235 / 0.6);
+}
+.sp[data-look='plain'] .pill-btn.primary:hover {
+  background: #1d4ed8;
+}
+.sp[data-look='plain'] .pill-btn.primary,
+.sp[data-look='plain'] .send,
+.sp[data-look='plain'] .chat-meta b {
+  color: #fff;
+}
+.sp[data-look='plain'] .avatar,
+.sp[data-look='plain'] .avatar i {
+  box-shadow: 0 0 0 2px #fff;
+}
+.sp[data-look='plain'] .chip.up {
+  background: #e7f6ec;
+}
+.sp[data-look='plain'] .chip.down {
+  background: #fdecec;
+}
+
+/* Active states: black pills with white text */
+.sp[data-look='plain'] .seg-ind,
+.sp[data-look='plain'] .nav-ind {
+  background: var(--ink);
+  border: 0;
+  box-shadow: 0 4px 12px rgb(16 24 40 / 0.18);
+}
+.sp[data-look='plain'] .seg button[aria-pressed='true'],
+.sp[data-look='plain'] .top-nav button[data-active='true'] {
+  color: #fff;
+}
+.sp[data-look='plain'] .top-nav button[data-active='true'] {
+  border-color: transparent;
+}
+.sp[data-look='plain'] .sb[data-open='true'] .sb-row[data-active='true'] {
+  background: var(--soft);
+  box-shadow: none;
+}
+
+/* Chart */
+.sp[data-look='plain'] .chart-grid span::after {
+  border-top-color: var(--line);
+}
+.sp[data-look='plain'] .bar-col:not([data-current='true']) .sp-bar {
+  background: #e3e7ed;
+  box-shadow: none;
+}
+.sp[data-look='plain'] .bar-col[data-current='true'] .sp-bar {
+  background: linear-gradient(180deg, #5b8def, var(--accent));
+  box-shadow: 0 8px 20px -8px rgb(37 99 235 / 0.6);
+}
+.sp[data-look='plain'] .bar-col:hover .sp-bar,
+.sp[data-look='plain'] .bar-col:focus-visible .sp-bar {
+  filter: brightness(0.94);
+}
+.sp[data-look='plain'] .bar-tip {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* Dividers */
+.sp[data-look='plain'] .rows li,
+.sp[data-look='plain'] .chat-head,
+.sp[data-look='plain'] .saved footer {
+  border-color: var(--line);
+}
+
+/* Messages */
+.sp[data-look='plain'] .msg p {
+  background: var(--soft);
+}
+.sp[data-look='plain'] .msg.me p {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: none;
+}
+.sp[data-look='plain'] .composer:focus-within {
+  border-color: var(--accent);
+}
+
+/* Saved: the colored tiles keep white text */
+.sp[data-look='plain'] .saved-art {
+  color: #fff;
+}
+.sp[data-look='plain'] .saved:hover {
+  box-shadow: 0 16px 32px -12px rgb(16 24 40 / 0.18);
+}
+
+/* ---------- Plain dark ---------- */
+/* Glass's text and accent colors already suit a dark page; only the surfaces become solid. */
+.sp[data-look='plain-dark'],
+:root[data-look='plain-dark'] {
+  --glass: #1b1c20;
+  --glass-strong: #1b1c20;
+  --glass-hover: #23252a;
+  --line: #2b2d33;
+  --line-top: #2b2d33;
+  --soft: rgb(255 255 255 / 0.05);
+  --soft-2: rgb(255 255 255 / 0.09);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+  --lift: 0 1px 2px rgb(0 0 0 / 0.35);
+  --pop-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.65);
+  --field-inset: inset 0 1px 2px rgb(0 0 0 / 0.25);
+  --overlay: rgb(0 0 0 / 0.5);
+  --pill: #2e3036;
+  --pill-line: #3a3c43;
+  --pill-text: var(--text);
+
+  background: #0f1012;
+}
+.sp[data-look='plain-dark'] .glass,
+.sp[data-look='plain-dark'] .sb {
+  box-shadow: var(--shadow);
+}
+.sp[data-look='plain-dark'] .nav-ind {
+  background: #2e3036;
+  border-color: #3a3c43;
+  box-shadow: none;
+}
+.sp[data-look='plain-dark'] .bar-col:not([data-current='true']) .sp-bar {
+  background: #34363d;
+  box-shadow: none;
+}
+.sp[data-look='plain-dark'] .bar-col[data-current='true'] .sp-bar {
+  box-shadow: 0 8px 20px -8px rgb(77 141 255 / 0.6);
+}
+.sp[data-look='plain-dark'] .chart-grid span::after,
+.sp[data-look='plain-dark'] .rows li,
+.sp[data-look='plain-dark'] .chat-head,
+.sp[data-look='plain-dark'] .saved footer {
+  border-color: var(--line);
+}
+.sp[data-look='plain-dark'] .msg p {
+  background: #26282e;
+}
+.sp[data-look='plain-dark'] .msg.me p {
+  background: var(--accent);
+  box-shadow: none;
+}
+.sp[data-look='plain-dark'] .avatar i,
+.sp[data-look='plain-dark'] .sb-avatar i {
+  box-shadow: 0 0 0 2px var(--glass);
+}
+.sp[data-look='plain-dark'] .sb[data-open='true'] .sb-row[data-active='true'] {
+  background: #2a2c32;
+  box-shadow: none;
+}
