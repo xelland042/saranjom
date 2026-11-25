@@ -221,16 +221,18 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
-/* An invisible button over the collapsed field: clicking it opens the panel. */
+/* An invisible button over the collapsed field: clicking it opens the panel. It has no icon of
+   its own: the field's shows through. (It had one, meant to be transparent, but `.sp button`
+   outranks a single class, so it showed as a second magnifier while the dock moved.) */
 .sb-search-tile {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  /* an empty button can shrink to nothing in some browsers, whatever inset says */
+  width: 100%;
+  height: 100%;
   border: 0;
   border-radius: 14px;
   background: transparent;
-  color: transparent;
   transition: transform 0.25s var(--spring);
 }
 .sb-search-tile:hover + .sb-search-field {

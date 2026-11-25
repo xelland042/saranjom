@@ -13,9 +13,11 @@ trap 'rm -rf "$tmp"' EXIT
 git archive HEAD | tar -x -C "$tmp"
 (cd "$tmp/frontend" && npm ci --silent && npm run build)
 
-rsync -az --delete "$tmp/frontend/dist/" "$host:$dir/site/"
+# owned by root there: rsync would otherwise keep this machine's user number, and whoever got
+# that number on the server later would own scripts that root runs every night
+rsync -az --delete --chown=root:root "$tmp/frontend/dist/" "$host:$dir/site/"
 # the server's own .env and the site just sent are excluded, so --delete leaves them alone
-rsync -az --delete --exclude /.env --exclude /site --exclude /frontend --exclude /docs \
+rsync -az --delete --chown=root:root --exclude /.env --exclude /site --exclude /frontend --exclude /docs \
     --exclude /.github "$tmp/" "$host:$dir/"
 # migrations run first (the migrate service), then the API restarts on the new code. Caddy is
 # restarted because a running container keeps reading the Caddyfile it started with

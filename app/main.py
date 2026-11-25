@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
 from contextlib import asynccontextmanager
 
 from opentelemetry import trace
@@ -43,7 +42,6 @@ async def lifespan(app: FastAPI):
 
 
 main_app = FastAPI(
-    default_response_class=ORJSONResponse,
     lifespan=lifespan,
     debug=settings.debug,
 )

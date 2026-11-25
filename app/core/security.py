@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import re
 import secrets
+import threading
 from typing import Literal
 
 LoginKind = Literal["phone", "email", "username"]
@@ -44,26 +45,31 @@ def parse_login(raw: str) -> tuple[LoginKind, str]:
 # scrypt is in the standard library and memory-hard; ~64 MB and ~0.1 s per hash
 _N, _R, _P = 2**16, 8, 1
 _MAXMEM = 128 * 1024 * 1024
+# two hashes at a time, the rest wait: six logins at once took 430 MB on a 1 GB server, and
+# nobody needs an account to send them
+_slots = threading.BoundedSemaphore(2)
 
 
 def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
-    digest = hashlib.scrypt(
-        password.encode(), salt=salt, n=_N, r=_R, p=_P, maxmem=_MAXMEM
-    )
+    with _slots:
+        digest = hashlib.scrypt(
+            password.encode(), salt=salt, n=_N, r=_R, p=_P, maxmem=_MAXMEM
+        )
     return f"scrypt${_N}${_R}${_P}${salt.hex()}${digest.hex()}"
 
 
 def verify_password(password: str, stored: str) -> bool:
     _, n, r, p, salt, digest = stored.split("$")
-    candidate = hashlib.scrypt(
-        password.encode(),
-        salt=bytes.fromhex(salt),
-        n=int(n),
-        r=int(r),
-        p=int(p),
-        maxmem=_MAXMEM,
-    )
+    with _slots:
+        candidate = hashlib.scrypt(
+            password.encode(),
+            salt=bytes.fromhex(salt),
+            n=int(n),
+            r=int(r),
+            p=int(p),
+            maxmem=_MAXMEM,
+        )
     return hmac.compare_digest(candidate, bytes.fromhex(digest))
 
 

@@ -1,7 +1,8 @@
 # Production: Postgres, the API, and Caddy (HTTPS, the built frontend, /api passed to the API).
 # scripts/server-setup.sh prepares a server once (it writes the .env this file reads);
 # scripts/deploy.sh sends the code and the built frontend (./site) and runs `up -d --build`.
-# Only Caddy is reachable from outside.
+# Only Caddy is reachable from outside. The memory caps suit a 1 GB server: a runaway container is
+# restarted alone, before the kernel picks a victim itself (which can be the database).
 
 x-logging: &logging
   driver: json-file
@@ -13,6 +14,7 @@ services:
   db:
     image: postgres:17
     restart: unless-stopped
+    mem_limit: 350m
     environment:
       POSTGRES_USER: open_erp
       POSTGRES_PASSWORD: ${DB_OWNER_PASSWORD:?}
@@ -42,6 +44,8 @@ services:
   api:
     build: .
     restart: unless-stopped
+    # idle ~110 MB, two password hashes at once ~130 MB more, an Excel import on top
+    mem_limit: 400m
     environment:
       MAIN_CONFIG__DB__URL: postgresql+asyncpg://open_erp_app:${DB_APP_PASSWORD}@db:5432/open_erp
       # the demo company's password, for `run --rm api python -m app.scripts.seed_demo`
@@ -54,6 +58,7 @@ services:
   caddy:
     image: caddy:2
     restart: unless-stopped
+    mem_limit: 100m
     ports:
       - "80:80"
       - "443:443"

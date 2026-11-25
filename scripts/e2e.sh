@@ -15,6 +15,8 @@ psql "postgresql://open_erp:open_erp@$PG/postgres" -q \
   -c "DROP DATABASE IF EXISTS $DB WITH (FORCE)" -c "CREATE DATABASE $DB"
 export MAIN_CONFIG__DB__URL="postgresql+asyncpg://open_erp_app:open_erp_app@$PG/$DB"
 export MAIN_CONFIG__DB__MIGRATION_URL="postgresql+asyncpg://open_erp:open_erp@$PG/$DB"
+# every test signs up and logs in from this one machine: the per-address limits would stop them
+export MAIN_CONFIG__AUTH__SIGNUPS_PER_HOUR=100000 MAIN_CONFIG__AUTH__REQUESTS_PER_MINUTE=100000
 # quiet when it works; the whole output when it doesn't
 log="$(mktemp)"
 (cd "$ROOT/app" && $PY -m alembic upgrade head >"$log" 2>&1) || { cat "$log"; exit 1; }

@@ -35,6 +35,9 @@ jobs:
         run: poetry run black --check app
       - name: Lint (unused imports, undefined names, likely bugs)
         run: poetry run ruff check app
+      # fails when a package we install has a published vulnerability: update it (poetry update)
+      - name: Known vulnerabilities in Python packages
+        run: poetry run pip-audit
       - name: Create the app role
         run: psql postgresql://open_erp:open_erp@localhost:5432/open_erp -f docker/postgres-init.sql
       - name: Migrations apply, and match the models
@@ -59,6 +62,8 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      - name: Known vulnerabilities in the packages that ship
+        run: npm audit --omit=dev
       - run: npm run lint
       - run: npm test
       - run: npm run build

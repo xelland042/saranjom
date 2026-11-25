@@ -4,10 +4,19 @@ from app.api.deps import CurrentUser
 from app.core.config import settings
 from app.core.database import SessionDep
 from app.core.errors import InvalidField
+from app.core.ratelimit import RateLimit
 from app.crud.auth import AuthManager, LoginFailed, TooManyAttempts
 from app.schemas.auth import LoginIn, MeOut, PasswordIn, SignupIn
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+_requests = RateLimit(seconds=60)
+_signups = RateLimit(seconds=3600)
+
+
+def _too_many() -> HTTPException:
+    return HTTPException(
+        status.HTTP_429_TOO_MANY_REQUESTS, "Too many attempts, try again later"
+    )
 
 
 def _set_cookie(response: Response, token: str) -> None:
@@ -25,7 +34,12 @@ def _set_cookie(response: Response, token: str) -> None:
 
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
-async def signup(data: SignupIn, response: Response, session: SessionDep):
+async def signup(
+    data: SignupIn, request: Request, response: Response, session: SessionDep
+):
+    _throttle(request)
+    if not _signups.allow(_ip(request), settings.auth.signups_per_hour):
+        raise _too_many()
     try:
         token = await AuthManager(session).signup(data)
     except ValueError as e:
@@ -38,6 +52,7 @@ async def signup(data: SignupIn, response: Response, session: SessionDep):
 async def login(
     data: LoginIn, request: Request, response: Response, session: SessionDep
 ):
+    _throttle(request)
     try:
         token = await AuthManager(session).login(
             data.login, data.password, _ip(request)
@@ -70,11 +85,20 @@ def _ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def _throttle(request: Request) -> None:
+    """One address can't flood the routes that hash passwords: refused before any hashing or
+    database work. The failed-login limit only counts after a hash, so a burst got past it.
+    """
+    if not _requests.allow(_ip(request), settings.auth.requests_per_minute):
+        raise _too_many()
+
+
 @router.post("/password")
 async def change_password(
     data: PasswordIn, request: Request, session: SessionDep, current: CurrentUser
 ):
     """Any logged-in person, for themselves; the owner resets others' on the staff page."""
+    _throttle(request)
     token = request.cookies[settings.auth.cookie_name]  # CurrentUser checked it's there
     try:
         await AuthManager(session).change_password(

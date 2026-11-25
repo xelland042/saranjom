@@ -22,12 +22,15 @@ PUBLIC = {
 class RouteTableTest(unittest.TestCase):
     def test_every_route_has_a_permission_and_the_table_has_no_stale_ones(self):
         prefix = settings.api.prefix + settings.api.v1.prefix
+        # from the app's own description of itself (OpenAPI): how the framework nests routers
+        # inside has changed between its versions, this hasn't
         routes = {
-            f"{m} {r.path.removeprefix(prefix)}"
-            for r in main_app.routes
-            if getattr(r, "methods", None) and r.path.startswith(prefix)
-            for m in r.methods
+            f"{method.upper()} {path.removeprefix(prefix)}"
+            for path, operations in main_app.openapi()["paths"].items()
+            if path.startswith(prefix)
+            for method in operations
         }
+        self.assertGreater(len(routes), 50, "the route list came out empty")
         self.assertEqual(
             routes - PUBLIC - set(ROUTES), set(), "routes without a permission"
         )

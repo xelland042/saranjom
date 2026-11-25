@@ -206,9 +206,7 @@ export function Sidebar({ active, onNavigate, look, onLook, user = { name: 'Rust
             setOpen(true)
             requestAnimationFrame(() => search.current?.focus())
           }}
-        >
-          <Icon name="search" size={18} />
-        </button>
+        />
         <label className="sb-search-field">
           <Icon name="search" size={16} />
           <input ref={search} placeholder="Search" aria-label="Search" tabIndex={open ? 0 : -1} />

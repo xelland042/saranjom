@@ -1,4 +1,7 @@
+import threading
+import time
 import unittest
+from unittest.mock import patch
 
 from app.core.security import hash_password, parse_login, verify_password
 
@@ -33,6 +36,31 @@ class PasswordTest(unittest.TestCase):
 
     def test_same_password_hashes_differently(self):
         self.assertNotEqual(hash_password("x" * 8), hash_password("x" * 8))
+
+    def test_only_two_hashes_run_at_once(self):
+        # each real hash takes ~64 MB, so a burst must queue: count how many are inside at once
+        lock, running, peak = threading.Lock(), 0, 0
+
+        def slow_scrypt(*args, **kwargs):
+            nonlocal running, peak
+            with lock:
+                running += 1
+                peak = max(peak, running)
+            time.sleep(0.05)
+            with lock:
+                running -= 1
+            return b"x" * 64
+
+        with patch("app.core.security.hashlib.scrypt", slow_scrypt):
+            threads = [
+                threading.Thread(target=hash_password, args=("secret-123",))
+                for _ in range(6)
+            ]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+        self.assertEqual(peak, 2)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,9 @@
 import unittest
+from unittest.mock import patch
 
 import httpx
 
+from app.core.config import settings
 from app.core.database import db_helper
 from app.main import main_app
 from app.tests.db import needs_db, random_ip, random_phone
@@ -110,6 +112,33 @@ class AuthFlowTest(unittest.IsolatedAsyncioTestCase):
                 f"{API}/login", json={"login": phone, "password": "secret-123"}
             )
         self.assertEqual(right.status_code, 429)
+
+    async def test_one_address_can_only_sign_up_so_many_companies(self):
+        with patch.object(settings.auth, "signups_per_hour", 2):
+            codes = [
+                (await self._signup(self.client, random_phone())).status_code
+                for _ in range(3)
+            ]
+            # another address isn't held back by the first one
+            async with self._client() as other:
+                elsewhere = (await self._signup(other, random_phone())).status_code
+        self.assertEqual(codes, [201, 201, 429])
+        self.assertEqual(elsewhere, 201)
+
+    async def test_a_burst_from_one_address_is_refused_before_any_password_is_checked(
+        self,
+    ):
+        phone = random_phone()
+        await self._signup(self.client, phone)
+        right = {"login": phone, "password": "secret-123"}
+        with patch.object(settings.auth, "requests_per_minute", 3):
+            async with self._client() as c:
+                codes = [
+                    (await c.post(f"{API}/login", json=right)).status_code
+                    for _ in range(4)
+                ]
+        # the right password, so only the count of requests can have refused the fourth
+        self.assertEqual(codes, [200, 200, 200, 429])
 
     async def test_changing_your_password_logs_out_your_other_sessions(self):
         phone = random_phone()

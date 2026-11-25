@@ -15,6 +15,11 @@
 
 	# Caddy replaces any X-Forwarded-For a visitor sends with their real address
 	handle /api/* {
+		# the largest thing the app takes is a 5 MB Excel file; anything bigger is refused here,
+		# before the API reads it into memory
+		request_body {
+			max_size 10MB
+		}
 		reverse_proxy api:8000
 	}
 

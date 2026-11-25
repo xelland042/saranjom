@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 UNIQUE_VIOLATION = "23505"
@@ -24,7 +24,7 @@ class Duplicate(Exception):
 
 
 async def invalid_field_handler(request: Request, exc: InvalidField):
-    return ORJSONResponse(
+    return JSONResponse(
         status_code=422,
         content={
             "detail": [
@@ -35,7 +35,7 @@ async def invalid_field_handler(request: Request, exc: InvalidField):
 
 
 async def duplicate_handler(request: Request, exc: Duplicate):
-    return ORJSONResponse(
+    return JSONResponse(
         status_code=409,
         content={"detail": "Already exists", "field": exc.field, "id": exc.existing_id},
     )
@@ -44,7 +44,7 @@ async def duplicate_handler(request: Request, exc: Duplicate):
 async def integrity_error_handler(request: Request, exc: IntegrityError):
     # asyncpg's wrapped error carries the Postgres error code as sqlstate
     if getattr(exc.orig, "sqlstate", None) == UNIQUE_VIOLATION:
-        return ORJSONResponse(status_code=409, content={"detail": "Already exists"})
+        return JSONResponse(status_code=409, content={"detail": "Already exists"})
     # other constraint failures aren't classified yet: re-raise so they're logged as a 500
     raise exc
 

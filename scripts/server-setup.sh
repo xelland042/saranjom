@@ -10,7 +10,10 @@ dir=/opt/open-erp
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
-apt-get install -yq docker.io docker-compose rsync ufw unattended-upgrades openssl
+# a hosting company's image can be months behind; the nightly job below only adds new ones
+apt-get upgrade -yq -o Dpkg::Options::=--force-confold
+# fail2ban blocks an address after a few wrong SSH passwords (its sshd jail is on by default)
+apt-get install -yq docker.io docker-compose rsync ufw unattended-upgrades openssl fail2ban
 printf 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgrade "1";\n' \
     > /etc/apt/apt.conf.d/20auto-upgrades
 

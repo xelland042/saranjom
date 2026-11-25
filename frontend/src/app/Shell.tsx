@@ -257,9 +257,7 @@ export default function Shell({ me, children }: { me: Me; children: ReactNode })
         </div>
 
         <form className="sb-search" role="search" data-tip={`${t(searchLabel)}\n${shortcut}`} onSubmit={submitSearch}>
-          <button type="button" className="sb-search-tile" aria-label={t(searchLabel)} tabIndex={open ? -1 : 0} onClick={openOnSearch}>
-            <Search className="size-4" />
-          </button>
+          <button type="button" className="sb-search-tile" aria-label={t(searchLabel)} tabIndex={open ? -1 : 0} onClick={openOnSearch} />
           <label className="sb-search-field">
             <Search className="size-4 flex-none" aria-hidden="true" />
             <input
