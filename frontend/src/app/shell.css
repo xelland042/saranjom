@@ -4,11 +4,20 @@
   min-height: 100vh;
 }
 /* Nothing moves behind the app's panels. Whatever moves there makes every frosted panel blur its
-   backdrop again on each frame: wasted work on any machine when it never stops (the glows), and on
-   some graphics cards panels flicker between blurred and clear. The login screen has one card, so
-   it keeps the glows' drift and the waves' entrance. */
+   backdrop again on each frame: wasted work that never stops (the glows). The login screen has one
+   card, so it keeps the glows' drift and the waves' entrance. */
 .shell :is(.sp-photo i, .auth-glow) {
   animation: none;
+}
+
+/* A frosted card that is a link or a button brightens under the pointer; it never lifts. While a
+   frosted card moves, the browser regroups the frosted cards near it, and for those frames the
+   neighbours can show the wallpaper sharp, with no blur (seen in Firefox and Chrome, Radeon 550). */
+.shell :is(a, button).glass {
+  transition: background 0.2s var(--ease);
+}
+.shell :is(a, button).glass:hover {
+  background: var(--glass-hover);
 }
 
 /* The page leaves room for the narrow dock (18px offset + 70px dock + 28px gap). On wide screens

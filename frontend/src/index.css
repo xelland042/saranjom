@@ -159,6 +159,19 @@ body {
   }
 }
 
+/* A loading placeholder waits 0.4s before it shows. A server answers in about a quarter of a second,
+   and placeholders shown for that long are a flash, not a message: plain blocks where the frosted
+   panels are about to be. The delay is !important so reduced motion (below) can't zero it. */
+[data-slot='skeleton'] {
+  animation: var(--animate-pulse), skeleton-late 0s backwards;
+  animation-delay: 0s, 0.4s !important;
+}
+@keyframes skeleton-late {
+  from {
+    visibility: hidden;
+  }
+}
+
 /* ---------- Motion for shadcn components ---------- */
 /* Popups open with the spring, growing from their trigger (Radix sets the origin), and close quickly.
    tw-animate-css reads these variables. */

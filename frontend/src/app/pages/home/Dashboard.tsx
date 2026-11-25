@@ -78,7 +78,7 @@ export default function Dashboard() {
 
 function Stat({ label, value, sub, to, i, tone }: { label: string; value: string; sub: ReactNode; to: string; i: number; tone?: 'red' }) {
   return (
-    <Link to={to} className="glass rise group grid content-start gap-1 p-5 transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-(--accent)" style={{ '--i': i } as CSSProperties}>
+    <Link to={to} className="glass rise group grid content-start gap-1 p-5 focus-visible:outline-2 focus-visible:outline-(--accent)" style={{ '--i': i } as CSSProperties}>
       <span className="flex items-center justify-between text-sm text-muted-foreground">
         {label}
         <ArrowRight className="size-4 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />

@@ -20,7 +20,7 @@ export default function StatStrip({ stats, i = 1 }: { stats: Stat[]; i?: number 
         )
         const box = 'glass grid min-w-36 flex-none gap-0.5 px-4 py-3 sm:min-w-0'
         return s.link ? (
-          <Link key={s.label} {...s.link} className={`${box} transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-(--accent)`}>
+          <Link key={s.label} {...s.link} className={`${box} focus-visible:outline-2 focus-visible:outline-(--accent)`}>
             {body}
           </Link>
         ) : (

@@ -93,7 +93,7 @@ export default function Staff() {
             key={r.id}
             type="button"
             onClick={() => setRoleDialog({ open: true, role: r })}
-            className="glass rise grid content-start gap-2.5 p-4 text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-(--accent)"
+            className="glass rise grid content-start gap-2.5 p-4 text-left focus-visible:outline-2 focus-visible:outline-(--accent)"
             style={{ '--i': i + 2 } as CSSProperties}
           >
             <span className="flex items-center gap-2 font-medium">
