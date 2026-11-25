@@ -1,4 +1,6 @@
-// Icons and the background scene for the glass prototype. Everything is drawn here, no image files.
+// Icons and what sits behind the glass: the wallpaper (the only image files) and the drawn scene
+// shown when they're missing.
+import type { CSSProperties } from 'react'
 
 const PATHS: Record<string, string> = {
   home: 'M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
@@ -44,6 +46,17 @@ export function Icon({ name, size = 18 }: { name: string; size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={PATHS[name]} />
     </svg>
+  )
+}
+
+// The wallpaper, cut into its waves of glass (public/bg, back to front) so each moves by itself.
+export function Wallpaper({ look }: { look: 'glass' | 'light' }) {
+  return (
+    <div className="sp-photo" aria-hidden="true">
+      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+        <i key={i} style={{ '--i': i, backgroundImage: `url(/bg/${look}-${i}.webp)` } as CSSProperties} />
+      ))}
+    </div>
   )
 }
 

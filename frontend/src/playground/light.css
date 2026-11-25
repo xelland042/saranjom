@@ -40,10 +40,6 @@
   background: #e9eaec;
   color: var(--text);
 }
-.sp[data-look='light'] .sp-photo {
-  background-image: url('/bg/light.jpg');
-}
-
 /* Panels and controls */
 .sp[data-look='light'] .glass {
   box-shadow: var(--shadow);

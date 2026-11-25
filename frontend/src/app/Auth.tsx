@@ -261,13 +261,6 @@ export default function Auth() {
   const [busy, setBusy] = useState(false)
   const [last, setLast] = useState<LastUser | null>(readLastUser)
 
-  // The wallpaper drifts a few pixels with the pointer, as in the app. The card itself stays still.
-  function onPointer(e: React.PointerEvent<HTMLDivElement>) {
-    const el = e.currentTarget
-    el.style.setProperty('--px', `${(e.clientX / window.innerWidth - 0.5) * -7}px`)
-    el.style.setProperty('--py', `${(e.clientY / window.innerHeight - 0.5) * -5}px`)
-  }
-
   async function submit(e: FormEvent<HTMLFormElement>, path: string) {
     e.preventDefault()
     const form = e.currentTarget
@@ -301,7 +294,7 @@ export default function Auth() {
   )
 
   return (
-    <div className="sp" data-look={look} lang={lang} onPointerMove={onPointer}>
+    <div className="sp" data-look={look} lang={lang}>
       <Backdrop />
 
       <div className="grid min-h-screen place-items-center px-4 py-10">

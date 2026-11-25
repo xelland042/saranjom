@@ -3,6 +3,13 @@
 .shell {
   min-height: 100vh;
 }
+/* Nothing moves behind the app's panels. Whatever moves there makes every frosted panel blur its
+   backdrop again on each frame: wasted work on any machine when it never stops (the glows), and on
+   some graphics cards panels flicker between blurred and clear. The login screen has one card, so
+   it keeps the glows' drift and the waves' entrance. */
+.shell :is(.sp-photo i, .auth-glow) {
+  animation: none;
+}
 
 /* The page leaves room for the narrow dock (18px offset + 70px dock + 28px gap). On wide screens
    it also makes room for the open panel, moving with the dock's spring; narrower, the panel covers it. */

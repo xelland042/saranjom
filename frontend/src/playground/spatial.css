@@ -1,9 +1,6 @@
 /* Glass prototype layout. Colors, blur and easing come from the theme tokens in src/index.css. */
 
 .sp {
-  --px: 0px;
-  --py: 0px;
-
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
@@ -42,17 +39,31 @@
   width: calc(100% + 48px);
   height: calc(100% + 48px);
   z-index: -2;
-  transform: translate(var(--px), var(--py)) scale(1.02);
-  transition: transform 1.2s var(--ease);
 }
-/* Photo background over the drawn scene. If the file is missing, the scene shows through. */
+/* The wallpaper over the drawn scene: seven pictures, back to front, one per wave of glass
+   (scripts/split-wallpaper.py cuts them). If the files are missing, the scene shows through. */
 .sp-photo {
   position: fixed;
   inset: -24px;
   z-index: -2;
-  background: url('/bg/glass.jpg') center / cover no-repeat;
-  transform: translate(var(--px), var(--py)) scale(1.02);
-  transition: transform 1.2s var(--ease);
+}
+.sp-photo i {
+  position: absolute;
+  inset: 0;
+  background: center / cover no-repeat;
+  /* When the screen opens each wave rises into its place, the far ones first (--i: 0 at the back,
+     6 nearest), and then nothing moves: a wallpaper that keeps moving, by itself or with the
+     pointer, tires the eyes of someone who works in front of it all day. */
+  animation: wave-in 1.6s var(--ease) calc(var(--i) * 90ms) backwards;
+}
+.sp-photo i:first-child {
+  animation: none;
+}
+@keyframes wave-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(10px + var(--i) * 6px));
+  }
 }
 .sp-shade {
   position: fixed;
@@ -1283,6 +1294,7 @@
     animation-delay: 0ms !important;
     transition-duration: 1ms !important;
   }
-  .sp-scene,
-  .sp-photo { transform: none; }
+  .sp-photo i {
+    animation: none;
+  }
 }

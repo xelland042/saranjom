@@ -2,7 +2,7 @@
 // and three working pages (Home, Messages, Saved). Each page has an address, like /#/messages.
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { LogOut } from 'lucide-react'
-import { Icon, Scene } from './parts'
+import { Icon, Scene, Wallpaper } from './parts'
 import { Sidebar } from './Sidebar'
 import Kit from './Kit'
 import { lookPrefix, type Look } from './looks'
@@ -850,23 +850,14 @@ export default function Spatial({ look = 'glass', user, logoutLabel = 'Log out',
   useEffect(() => {
     document.documentElement.dataset.look = look
   }, [look])
-  const root = useRef<HTMLDivElement>(null)
   const [topRef, topInd] = useIndicator(page)
 
-  // Background drifts a few pixels with the pointer, for depth. Skipped with reduced motion in CSS.
-  function parallax(e: React.PointerEvent) {
-    const r = root.current
-    if (!r) return
-    r.style.setProperty('--px', `${(e.clientX / window.innerWidth - 0.5) * -14}px`)
-    r.style.setProperty('--py', `${(e.clientY / window.innerHeight - 0.5) * -10}px`)
-  }
-
   return (
-    <div className="sp" data-look={look} ref={root} onPointerMove={parallax}>
+    <div className="sp" data-look={look}>
       {/* Glass draws a scene under its photo as a fallback; Light falls back to a plain color.
           The Plain looks have no wallpaper at all. */}
       {look === 'glass' && <Scene />}
-      {(look === 'glass' || look === 'light') && <div className="sp-photo" aria-hidden="true" />}
+      {(look === 'glass' || look === 'light') && <Wallpaper look={look} />}
       {look === 'glass' && <div className="sp-shade" aria-hidden="true" />}
 
       <header className="sp-topbar">
