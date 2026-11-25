@@ -79,12 +79,12 @@ export default function OrderList() {
         <table className="w-full table-fixed text-sm" data-stale={list.isPlaceholderData || undefined}>
           <thead className="text-left text-xs text-muted-foreground">
             <tr className="border-b border-(--line)">
-              {head('№', 'number', { className: 'w-20', descFirst: true })}
+              {head('№', 'number', { className: 'w-16 sm:w-20', descFirst: true })}
               {head(t('customer'), 'customer')}
               {head(t('date'), 'date', { className: 'hidden w-44 md:table-cell', descFirst: true })}
               <th scope="col" className="hidden w-36 px-4 py-3 font-medium sm:table-cell">{t('state')}</th>
               {head(t('dueDate'), 'due', { className: 'hidden w-48 xl:table-cell' })}
-              {head(t('total'), 'total', { className: 'w-44 text-right sm:w-56', descFirst: true, align: 'right' })}
+              {head(t('total'), 'total', { className: 'w-36 text-right sm:w-56', descFirst: true, align: 'right' })}
             </tr>
           </thead>
           <tbody>

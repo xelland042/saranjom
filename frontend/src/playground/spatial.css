@@ -3,7 +3,10 @@
 .sp {
   position: relative;
   min-height: 100vh;
-  overflow-x: hidden;
+  /* clip, not hidden: hidden makes this box a scroll frame, and the phone's top bar
+     (position: sticky) then sticks to it and scrolls away with the page */
+  overflow-x: hidden; /* for Safari before 16, which has no clip */
+  overflow-x: clip;
   isolation: isolate;
 }
 .sp *,
@@ -65,12 +68,60 @@
     transform: translateY(calc(10px + var(--i) * 6px));
   }
 }
+@keyframes wave-fade {
+  from {
+    opacity: 0;
+  }
+}
 .sp-shade {
   position: fixed;
   inset: 0;
   z-index: -1;
   background: radial-gradient(120% 90% at 50% 40%, transparent 30%, rgb(10 8 6 / 0.45) 100%);
   pointer-events: none;
+}
+/* Firefox only. With an element pinned to the screen (position: fixed) behind them, frosted panels
+   lose their blur there whenever the browser redraws its own interface: a tab preview, a tooltip,
+   the link bar. A pinned background picture doesn't do it. So there the backdrop covers the whole
+   page and its pictures are pinned instead, and the two glows are drawn as pictures too: the same
+   circles with a soft edge, standing still (on the login screen the real ones drift).
+   Tried in Firefox 161 and no better than pinned: position: sticky, and scrolling the page inside
+   a frame. Other browsers keep the pinned elements: on phones a pinned background is unreliable. */
+@supports (-moz-appearance: none) {
+  .sp-photo,
+  .sp-shade {
+    position: absolute;
+    inset: 0;
+  }
+  .sp-photo i,
+  .sp-shade {
+    background-attachment: fixed;
+  }
+  /* the waves only fade in here: a moving element's pinned picture stops being pinned (the picture
+     would be sized to the page, then jump), and a wave moved down would stretch the page under it */
+  .sp-photo i {
+    animation-name: wave-fade;
+  }
+  .sp:is([data-look='glass'], [data-look='light']) .auth-glow {
+    display: none;
+  }
+  .sp:is([data-look='glass'], [data-look='light'])::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    /* auth.css: 42vmax circles, 12 and 8vmax past the top right corner, 16 and 10 past the bottom
+       left, blurred by 80px, which spreads their edge over about 160px each way */
+    --glow: 35%;
+    background:
+      radial-gradient(circle at calc(100% - 13vmax) 9vmax, color-mix(in srgb, var(--accent) var(--glow), transparent) calc(21vmax - 160px), transparent calc(21vmax + 160px)),
+      radial-gradient(circle at 11vmax calc(100% - 5vmax), color-mix(in srgb, var(--violet) var(--glow), transparent) calc(21vmax - 160px), transparent calc(21vmax + 160px));
+    background-attachment: fixed;
+  }
+  .sp[data-look='light']::after {
+    --glow: 18%;
+  }
 }
 
 /* ---------- Glass ---------- */

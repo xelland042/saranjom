@@ -12,7 +12,7 @@
 
 /* A frosted card that is a link or a button brightens under the pointer; it never lifts. While a
    frosted card moves, the browser regroups the frosted cards near it, and for those frames the
-   neighbours can show the wallpaper sharp, with no blur (seen in Firefox and Chrome, Radeon 550). */
+   neighbours can show the wallpaper sharp, with no blur (seen in Chrome on a Radeon 550). */
 .shell :is(a, button).glass {
   transition: background 0.2s var(--ease);
 }

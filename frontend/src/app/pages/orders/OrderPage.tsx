@@ -420,10 +420,10 @@ function View({ order }: { order: Order }) {
         <tr className="border-b border-(--line)">
           <th scope="col" className="w-10 px-4 py-3 font-medium">#</th>
           <th scope="col" className="px-4 py-3 font-medium">{t('product')}</th>
-          <th scope="col" className="w-32 px-4 py-3 text-right font-medium">{t('quantity')}</th>
+          <th scope="col" className="w-24 px-4 py-3 text-right font-medium sm:w-32">{t('quantity')}</th>
           <th scope="col" className="hidden w-36 px-4 py-3 text-right font-medium sm:table-cell print:table-cell">{t('price')}</th>
           <th scope="col" className="hidden w-24 px-4 py-3 text-right font-medium md:table-cell print:table-cell">{t('discount')}</th>
-          <th scope="col" className="w-40 px-4 py-3 text-right font-medium">{t('sum')}</th>
+          <th scope="col" className="w-28 px-4 py-3 text-right font-medium sm:w-40">{t('sum')}</th>
         </tr>
       </thead>
       <tbody>
