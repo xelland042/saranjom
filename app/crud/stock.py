@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy import (
     BigInteger,
@@ -30,6 +30,7 @@ from app.models import (
     SalesReturn,
     StockDocument,
     StockLine,
+    Supplier,
     Warehouse,
 )
 from app.schemas.stock import DocumentIn, WarehouseIn, WarehousePatch
@@ -40,6 +41,7 @@ DEFAULT_WAREHOUSE = {
     "ru": "Основной склад",
 }
 ZERO = Decimal("0.000")
+CENT = Decimal("0.01")
 
 
 def movements() -> Select:
@@ -326,18 +328,26 @@ class StockManager:
     # ---------- documents ----------
 
     async def documents(
-        self, kind: str | None, limit: int, offset: int
+        self,
+        kind: str | None,
+        limit: int,
+        offset: int,
+        supplier_id: int | None = None,
     ) -> tuple[list[dict], int]:
         lines = (
             select(StockLine.document_id, func.count().label("n"))
             .group_by(StockLine.document_id)
             .subquery()
         )
-        query = select(StockDocument, func.coalesce(lines.c.n, 0)).outerjoin(
-            lines, lines.c.document_id == StockDocument.id
+        query = (
+            select(StockDocument, func.coalesce(lines.c.n, 0), Supplier.name)
+            .outerjoin(lines, lines.c.document_id == StockDocument.id)
+            .outerjoin(Supplier, Supplier.id == StockDocument.supplier_id)
         )
         if kind:
             query = query.where(StockDocument.kind == kind)
+        if supplier_id:
+            query = query.where(StockDocument.supplier_id == supplier_id)
         count = await self.session.scalar(
             select(func.count()).select_from(query.subquery())
         )
@@ -356,10 +366,14 @@ class StockManager:
                 "date": d.date,
                 "warehouse_id": d.warehouse_id,
                 "to_warehouse_id": d.to_warehouse_id,
+                "currency": d.currency,
+                "supplier_id": d.supplier_id,
+                "supplier_name": supplier,
+                "total": d.total,
                 "cancelled": d.cancelled,
                 "lines": n,
             }
-            for d, n in rows
+            for d, n, supplier in rows
         ]
         return items, count or 0
 
@@ -370,7 +384,10 @@ class StockManager:
             .options(selectinload(StockDocument.lines))
         )
 
-    async def create_document(self, data: DocumentIn) -> StockDocument:
+    async def create_document(
+        self, data: DocumentIn, exchange_rate: Decimal | None = None
+    ) -> StockDocument:
+        """`exchange_rate`: for a purchase in a foreign currency, the rate to save on it."""
         await self._check_warehouse("warehouse_id", data.warehouse_id)
         if data.kind == "transfer":
             if (
@@ -386,6 +403,15 @@ class StockManager:
             raise InvalidField("lines", "Only receipts have prices")
         if has_prices and data.currency is None:
             raise InvalidField("currency", "Prices need a currency")
+        if data.supplier_id is not None:
+            if data.kind != "receipt":
+                raise InvalidField("supplier_id", "Only receipts have a supplier")
+            # what we owe for it is the sum of its lines, so none may be left without a price
+            if any(line.price is None for line in data.lines):
+                raise InvalidField("lines", "A purchase needs a price on every line")
+            supplier = await self.session.get(Supplier, data.supplier_id)
+            if supplier is None or supplier.archived_at is not None:
+                raise InvalidField("supplier_id", "No such supplier")
         ids = {line.product_id for line in data.lines}
         found = set(
             await self.session.scalars(
@@ -405,6 +431,23 @@ class StockManager:
             warehouse_id=data.warehouse_id,
             to_warehouse_id=data.to_warehouse_id,
             currency=data.currency if has_prices else None,
+            supplier_id=data.supplier_id,
+            # each line rounded by itself, like an order's lines, so the lines add up to the total
+            total=(
+                sum(
+                    (
+                        (line.quantity * line.price).quantize(
+                            CENT, rounding=ROUND_HALF_UP
+                        )
+                        for line in data.lines
+                        if line.price is not None
+                    ),
+                    Decimal("0.00"),
+                )
+                if has_prices
+                else None
+            ),
+            exchange_rate=exchange_rate if data.supplier_id is not None else None,
             note=data.note,
             created_by=self.user_id,
             lines=[

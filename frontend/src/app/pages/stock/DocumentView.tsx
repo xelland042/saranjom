@@ -1,6 +1,6 @@
 // One stock document, read-only: posted documents are never edited. Cancelling keeps it in the
 // history and stops it counting, so a mistake is fixed by cancelling and entering it again.
-import { useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { ArrowLeft, Ban, FileX } from 'lucide-react'
@@ -85,7 +85,7 @@ function Loaded({ doc }: { doc: StockDocument }) {
       onError: () => toast.error(t('notSaved')),
     })
 
-  const row = (label: Key, value: string) => (
+  const row = (label: Key, value: ReactNode) => (
     <div className="grid gap-0.5">
       <dt className="text-xs text-muted-foreground">{t(label)}</dt>
       <dd>{value || '—'}</dd>
@@ -112,6 +112,14 @@ function Loaded({ doc }: { doc: StockDocument }) {
           {row('date', formatDay(localDate(doc.date), lang))}
           {row(doc.kind === 'receipt' ? 'toWarehouse' : 'fromWarehouse', name(doc.warehouse_id))}
           {doc.kind === 'transfer' && row('toWarehouse', name(doc.to_warehouse_id))}
+          {doc.supplier_id &&
+            row(
+              'supplier',
+              <Link to="/stock/suppliers/$supplierId" params={{ supplierId: String(doc.supplier_id) }} className="font-medium underline-offset-4 hover:underline">
+                {doc.supplier_name}
+              </Link>,
+            )}
+          {doc.exchange_rate && doc.currency && row('exchangeRate', `1 ${doc.currency} = ${formatDecimal(doc.exchange_rate)} ${currencyLabel('UZS', lang)}`)}
           {row('note', doc.note ?? '')}
         </dl>
       </section>
@@ -147,7 +155,7 @@ function Loaded({ doc }: { doc: StockDocument }) {
         </table>
         {withPrices && doc.currency && (
           <p className="border-t border-(--line) px-4 py-3 text-right text-sm">
-            {t('total')}: <strong className="tabular-nums">{formatAmount(sum.toFixed(2))} {currencyLabel(doc.currency, lang)}</strong>
+            {t(doc.supplier_id ? 'purchaseTotal' : 'total')}: <strong className="tabular-nums">{formatAmount(doc.total ?? sum.toFixed(2))} {currencyLabel(doc.currency, lang)}</strong>
           </p>
         )}
       </section>

@@ -48,6 +48,8 @@ class DocumentIn(BaseModel):
     warehouse_id: int
     to_warehouse_id: int | None = None
     currency: Currency | None = None
+    # a receipt from a supplier is a purchase: every line then needs a price
+    supplier_id: int | None = None
     note: Note = None
     lines: list[LineIn] = Field(min_length=1, max_length=500)
 
@@ -78,6 +80,10 @@ class DocumentOut(BaseModel):
     warehouse_id: int
     to_warehouse_id: int | None
     currency: str | None
+    supplier_id: int | None = None
+    supplier_name: str | None = None
+    total: Decimal | None = None  # of a receipt with prices
+    exchange_rate: Decimal | None = None
     note: str | None
     cancelled: bool
     created_at: dt.datetime
@@ -92,6 +98,10 @@ class DocumentRow(BaseModel):
     date: dt.date
     warehouse_id: int
     to_warehouse_id: int | None
+    currency: str | None = None
+    supplier_id: int | None = None
+    supplier_name: str | None = None
+    total: Decimal | None = None
     cancelled: bool
     lines: int
 

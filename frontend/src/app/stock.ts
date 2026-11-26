@@ -24,13 +24,18 @@ export type DocumentRow = {
   date: string
   warehouse_id: number
   to_warehouse_id: number | null
+  currency: string | null
+  // a receipt from a supplier is a purchase: its total is what we owe for it
+  supplier_id: number | null
+  supplier_name: string | null
+  total: string | null
   cancelled: boolean
   lines: number
 }
 export type Line = { id: number; product_id: number; product_name: string; unit: string; quantity: string; price: string | null }
 export type Negative = { product_id: number; product_name: string; warehouse_id: number; quantity: string }
 export type StockDocument = Omit<DocumentRow, 'lines'> & {
-  currency: string | null
+  exchange_rate: string | null
   note: string | null
   created_at: string
   lines: Line[]
@@ -42,6 +47,7 @@ export type DocumentFields = {
   warehouse_id: number
   to_warehouse_id: number | null
   currency: string | null
+  supplier_id: number | null
   note: string
   lines: { product_id: number; quantity: string; price: string | null }[]
 }
@@ -105,7 +111,8 @@ export const balancesQuery = (productIds: number[]) =>
 
 export function useStockMutations() {
   const qc = useQueryClient()
-  const refresh = () => qc.invalidateQueries({ queryKey: ['stock'] })
+  // a purchase also changes what we owe its supplier
+  const refresh = () => (qc.invalidateQueries({ queryKey: ['suppliers'] }), qc.invalidateQueries({ queryKey: ['stock'] }))
   return {
     saveWarehouse: useMutation({
       mutationFn: ({ id, ...f }: { id?: number; name?: string; is_default?: true; archived?: boolean }) =>

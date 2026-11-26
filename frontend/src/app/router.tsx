@@ -20,6 +20,8 @@ import Balances from './pages/stock/Balances'
 import DocumentView from './pages/stock/DocumentView'
 import Documents from './pages/stock/Documents'
 import NewDocument from './pages/stock/NewDocument'
+import SupplierPage from './pages/stock/SupplierPage'
+import Suppliers from './pages/stock/Suppliers'
 import { METHODS, type Method } from './debts'
 import { STATUSES, type Status } from './orders'
 import { PRIORITIES, type Priority } from './tasks'
@@ -92,9 +94,22 @@ const newStockDocument = createRoute({
   getParentRoute: () => app,
   path: '/stock/documents/new',
   component: NewDocument,
-  validateSearch: (s: Record<string, unknown>): { kind: Kind } => ({ kind: kindOf(s.kind) ?? 'receipt' }),
+  // ?kind=receipt&supplier=7: an arrival started from a supplier's page
+  validateSearch: (s: Record<string, unknown>): { kind: Kind; supplier?: number } => ({ kind: kindOf(s.kind) ?? 'receipt', supplier: positive(s.supplier) }),
 })
 const stockDocument = createRoute({ getParentRoute: () => app, path: '/stock/documents/$documentId', component: DocumentView })
+// ?q=...&archived=true&owed=true
+const suppliers = createRoute({
+  getParentRoute: () => app,
+  path: '/stock/suppliers',
+  component: Suppliers,
+  validateSearch: (s: Record<string, unknown>): { q?: string; archived?: boolean; owed?: boolean } => ({
+    q: typeof s.q === 'string' && s.q ? s.q : undefined,
+    archived: s.archived === true || s.archived === 'true' || undefined,
+    owed: s.owed === true || s.owed === 'true' || undefined,
+  }),
+})
+const supplier = createRoute({ getParentRoute: () => app, path: '/stock/suppliers/$supplierId', component: SupplierPage })
 // ?q=...&status=draft&from=2026-11-01&to=2026-11-19&payment=unpaid&sort=-total
 const orders = createRoute({
   getParentRoute: () => app,
@@ -177,7 +192,7 @@ const prototype = createRoute({
   component: lazyRouteComponent(() => import('./pages/Prototype')),
 })
 
-const tree = root.addChildren([app.addChildren([home, orders, newOrder, order, salesReturn, debts, payments, tasks, customers, customer, statement, products, product, stock, stockDocuments, newStockDocument, stockDocument, staff]), ...(import.meta.env.DEV ? [prototype] : [])])
+const tree = root.addChildren([app.addChildren([home, orders, newOrder, order, salesReturn, debts, payments, tasks, customers, customer, statement, products, product, stock, stockDocuments, newStockDocument, stockDocument, suppliers, supplier, staff]), ...(import.meta.env.DEV ? [prototype] : [])])
 
 // 'root': unknown addresses always use the root's not-found page, which keeps the login-or-app frame
 export const router = createRouter({ routeTree: tree, notFoundMode: 'root' })

@@ -70,6 +70,7 @@ export default function Documents() {
                     {t(KIND_LABEL[d.kind])}
                   </Link>
                   {d.cancelled && <Badge variant="secondary" className="ml-2">{t('cancelledBadge')}</Badge>}
+                  {d.supplier_name && <span className="block truncate text-xs text-muted-foreground">{d.supplier_name}</span>}
                   <span className="block text-xs text-muted-foreground sm:hidden">{formatDay(localDate(d.date), lang)}</span>
                 </td>
                 <td className="hidden px-4 py-3 sm:table-cell">{formatDay(localDate(d.date), lang)}</td>

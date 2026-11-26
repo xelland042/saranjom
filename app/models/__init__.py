@@ -5,6 +5,7 @@ from .auth import AuthSession, LoginFailure
 from .customer import Customer, CustomerContact
 from .rate import CbuRate, CompanyRate
 from .payment import PAYMENT_METHODS, OpeningBalance, Payment
+from .supplier import Supplier, SupplierPayment
 from .task import DEFAULT_STAGES, PRIORITIES, STAGE_COLORS, Task, TaskStage
 from .activity import ENTITIES, Activity
 from .order import (
@@ -55,6 +56,8 @@ __all__ = [
     "PAYMENT_METHODS",
     "OpeningBalance",
     "Payment",
+    "Supplier",
+    "SupplierPayment",
     "Task",
     "TaskStage",
     "STAGE_COLORS",

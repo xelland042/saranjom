@@ -15,6 +15,7 @@ from .rates import router as rates_router
 from .returns import router as returns_router
 from .staff import roles_router, router as staff_router
 from .stock import router as stock_router
+from .suppliers import router as suppliers_router
 from .tasks import router as tasks_router
 
 router = APIRouter(
@@ -28,6 +29,7 @@ for r in (
     products_router,
     rates_router,
     stock_router,
+    suppliers_router,
     orders_router,
     returns_router,
     payments_router,

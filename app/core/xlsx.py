@@ -28,6 +28,7 @@ HEADERS: dict[str, tuple[str, str, str]] = {
     "number": ("№", "№", "№"),
     "date": ("Sana", "Сана", "Дата"),
     "customer": ("Mijoz", "Мижоз", "Клиент"),
+    "supplier": ("Yetkazib beruvchi", "Етказиб берувчи", "Поставщик"),
     "status": ("Holat", "Ҳолат", "Статус"),
     "currency": ("Valyuta", "Валюта", "Валюта"),
     "total": ("Jami", "Жами", "Сумма"),

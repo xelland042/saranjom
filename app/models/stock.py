@@ -73,6 +73,12 @@ class StockDocument(TenantMixin, Base):
     warehouse_id: Mapped[int] = mapped_column(BigInteger)
     to_warehouse_id: Mapped[int | None] = mapped_column(BigInteger)  # transfer only
     currency: Mapped[str | None] = mapped_column(String(3))  # of the receipt's prices
+    # A receipt from a supplier is a purchase: every line has a price, and its total is what we
+    # owe them for it (see app/crud/suppliers.py). A receipt without one is just goods counted in.
+    supplier_id: Mapped[int | None] = mapped_column(BigInteger)
+    total: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))  # of a priced receipt
+    # units of the company's main currency per one unit, saved when a purchase is entered
+    exchange_rate: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
     note: Mapped[str | None]
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_by: Mapped[int | None] = mapped_column(
@@ -103,7 +109,20 @@ class StockDocument(TenantMixin, Base):
         ForeignKeyConstraint(
             ["to_warehouse_id", "tenant_id"], ["warehouse.id", "warehouse.tenant_id"]
         ),
+        CheckConstraint(
+            "supplier_id IS NULL OR (kind = 'receipt' AND total IS NOT NULL)",
+            name="purchase",
+        ),
+        ForeignKeyConstraint(
+            ["supplier_id", "tenant_id"], ["supplier.id", "supplier.tenant_id"]
+        ),
         Index("ix_stock_document_tenant_date", "tenant_id", "date"),
+        Index(
+            "ix_stock_document_supplier",
+            "tenant_id",
+            "supplier_id",
+            postgresql_where=text("supplier_id IS NOT NULL"),
+        ),
     )
 
 

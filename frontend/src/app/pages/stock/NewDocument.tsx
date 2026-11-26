@@ -2,10 +2,13 @@
 // warehouses. Each line shows what the warehouse has now; taking more than that is allowed, with a
 // warning, because goods are often sold before their arrival is entered. Saving posts it for good:
 // a mistake is undone by cancelling the document, not by editing it.
+// A receipt may name a supplier: then it is a purchase, every line needs its price, and the total
+// is added to what we owe them.
 import { useState, type CSSProperties, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { AlertCircle, Plus, TriangleAlert, X } from 'lucide-react'
+import { invalidFields } from '../../api'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,8 +21,10 @@ import { CURRENCIES, currencyLabel, formatAmount, formatDecimal, parseAmount, pa
 import { PageHeader } from '../../Page'
 import { usePrefs } from '../../prefs'
 import type { Product } from '../../products'
+import Picker from '../../Picker'
 import ProductPicker from '../../ProductPicker'
 import { balancesQuery, KIND_LABEL, useStockMutations, warehousesQuery, type Kind } from '../../stock'
+import { searchSuppliers, supplierQuery, type Supplier } from '../../suppliers'
 
 const route = getRouteApi('/app/stock/documents/new')
 const INTRO: Record<Kind, Key> = { receipt: 'receiptIntro', write_off: 'writeOffIntro', transfer: 'transferIntro' }
@@ -33,14 +38,17 @@ const today = () => {
 }
 
 export default function NewDocument() {
-  const { kind } = route.useSearch()
+  const { kind, supplier } = route.useSearch()
   const warehouses = useQuery(warehousesQuery)
-  // the form starts from the warehouses, so it waits for them; a new kind starts a new form
-  if (!warehouses.data) return null
-  return <Form key={kind} kind={kind} />
+  // opened from a supplier's page: that supplier is already chosen
+  const from = useQuery(supplierQuery(kind === 'receipt' ? (supplier ?? 0) : 0))
+  // the form starts from the warehouses (and that supplier), so it waits for them; a new kind
+  // starts a new form
+  if (!warehouses.data || from.isLoading) return null
+  return <Form key={kind} kind={kind} from={from.data && !from.data.archived ? from.data : null} />
 }
 
-function Form({ kind }: { kind: Kind }) {
+function Form({ kind, from: givenSupplier }: { kind: Kind; from: Supplier | null }) {
   const { t, lang } = usePrefs()
   const navigate = useNavigate()
   const { createDocument } = useStockMutations()
@@ -52,9 +60,10 @@ function Form({ kind }: { kind: Kind }) {
   const [to, setTo] = useState(active.find((w) => w.id !== main?.id)?.id ?? 0)
   const [currency, setCurrency] = useState('UZS')
   const [note, setNote] = useState('')
+  const [supplier, setSupplier] = useState<Supplier | null>(givenSupplier)
   const [lines, setLines] = useState<Line[]>(() => [blankLine()])
   const [bad, setBad] = useState<Set<string>>(new Set())
-  const [failed, setFailed] = useState(false)
+  const [failed, setFailed] = useState<'notSaved' | 'noRateForCurrency' | null>(null)
 
   const ids = [...new Set(lines.flatMap((l) => (l.product ? [l.product.id] : [])))]
   const balances = useQuery(balancesQuery(ids)).data ?? {}
@@ -83,13 +92,14 @@ function Form({ kind }: { kind: Kind }) {
       const price = withPrices ? parseAmount(l.price) : null
       if (!l.product) errors.add(`${l.key}-product`)
       if (!quantity) errors.add(`${l.key}-quantity`)
-      if (price === undefined) errors.add(`${l.key}-price`)
+      // a purchase is what we owe for it: no line may be left without a price
+      if (price === undefined || (supplier && !price)) errors.add(`${l.key}-price`)
       return { product_id: l.product?.id ?? 0, quantity: quantity ?? '', price: price ?? null }
     })
     if (out.length === 0) errors.add('lines')
     if (kind === 'transfer' && (!to || to === from)) errors.add('to')
     if (errors.size) return setBad(errors)
-    setFailed(false)
+    setFailed(null)
     createDocument.mutate(
       {
         kind,
@@ -97,6 +107,7 @@ function Form({ kind }: { kind: Kind }) {
         warehouse_id: from,
         to_warehouse_id: kind === 'transfer' ? to : null,
         currency: out.some((l) => l.price) ? currency : null,
+        supplier_id: supplier?.id ?? null,
         note,
         lines: out,
       },
@@ -110,7 +121,7 @@ function Form({ kind }: { kind: Kind }) {
             })
           navigate({ to: '/stock/documents/$documentId', params: { documentId: String(doc.id) }, replace: true })
         },
-        onError: () => setFailed(true),
+        onError: (err) => setFailed(invalidFields(err).has('exchange_rate') ? 'noRateForCurrency' : 'notSaved'),
       },
     )
   }
@@ -156,6 +167,35 @@ function Form({ kind }: { kind: Kind }) {
             </Select>
           </div>
         )}
+        {kind === 'receipt' && (
+          <div className="grid content-start gap-1.5 sm:col-span-2 lg:col-span-4">
+            <Label htmlFor="doc-supplier">
+              {t('supplier')}
+              <span className="font-normal text-muted-foreground">({t('optional')})</span>
+            </Label>
+            {supplier ? (
+              <div className="flex items-center gap-2">
+                <span className="min-w-0 flex-1 truncate rounded-full glass-field px-4 py-2 text-sm font-medium">{supplier.name}</span>
+                <Button type="button" size="icon" variant="ghost" aria-label={t('clearSupplier')} onClick={() => setSupplier(null)}>
+                  <X aria-hidden="true" />
+                </Button>
+              </div>
+            ) : (
+              <Picker
+                id="doc-supplier"
+                value={supplier}
+                onChange={setSupplier}
+                search={searchSuppliers}
+                queryKey="suppliers"
+                label={(x) => x.name}
+                detail={(x) => x.inn}
+                placeholder={t('chooseSupplier')}
+                noMatches={t('noMatches')}
+              />
+            )}
+            <p className="text-xs text-muted-foreground">{t(supplier ? 'purchaseHint' : 'supplierHint')}</p>
+          </div>
+        )}
         <div className="sm:col-span-2 lg:col-span-4">
           <Field id="doc-note" label={t('note')} optional={t('optional')}>
             <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} rows={1} />
@@ -167,7 +207,7 @@ function Form({ kind }: { kind: Kind }) {
         <div className={`hidden gap-3 px-1 pb-1 text-xs text-muted-foreground sm:grid ${withPrices ? 'sm:grid-cols-[minmax(0,1fr)_8rem_9rem_8rem_2.25rem]' : 'sm:grid-cols-[minmax(0,1fr)_9rem_9rem_2.25rem]'}`}>
           <span>{t('product')}</span>
           <span className="text-right">{t('quantity')}</span>
-          {withPrices && <span className="text-right">{t('priceOptional')}</span>}
+          {withPrices && <span className="text-right">{t(supplier ? 'price' : 'priceOptional')}</span>}
           <span className="text-right">{withPrices ? t('sum') : t('available')}</span>
           <span />
         </div>
@@ -270,7 +310,7 @@ function Form({ kind }: { kind: Kind }) {
       {failed && (
         <p role="alert" className="mt-4 flex items-center gap-2 rounded-2xl bg-red/10 px-3.5 py-2.5 text-sm text-red">
           <AlertCircle className="size-4 flex-none" aria-hidden="true" />
-          {t('notSaved')}
+          {t(failed)}
         </p>
       )}
 

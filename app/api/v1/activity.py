@@ -19,6 +19,8 @@ SEES = {
     "product": "products.read",
     "stock_document": "stock.read",
     "return": "orders.read",
+    "supplier": "stock.read",
+    "supplier_payment": "money.read",
 }
 
 

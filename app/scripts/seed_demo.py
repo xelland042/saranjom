@@ -189,16 +189,37 @@ async def seed(demo: Demo) -> None:
             }
         )
 
-    # goods arrive: a big delivery two months ago, smaller ones since; flour also to Sergeli
-    for n, share in ((62, 1.0), (40, 0.5), (18, 0.4), (4, 0.3)):
-        await demo.post(
+    suppliers = [
+        await demo.post("/suppliers", body)
+        for body in (
+            {
+                "name": "Toshkent Don Mahsulotlari MChJ",
+                "inn": "302118845",
+                "phone": "+998712001122",
+                "address": "Toshkent sh., Sergeli tumani",
+            },
+            {
+                "name": "Agro Trade Group",
+                "inn": "305447790",
+                "phone": "+998951230077",
+                "address": "Toshkent vil., Zangiota tumani",
+                "note": "Oyiga ikki marta yetkazadi",
+            },
+        )
+    ]
+    # goods arrive: the stock the company started with two months ago, then smaller deliveries
+    # bought from the two suppliers in turn; flour also to Sergeli
+    bought = []
+    for i, (n, share) in enumerate(((62, 1.0), (40, 0.5), (18, 0.4), (4, 0.3))):
+        doc = await demo.post(
             "/stock-documents",
             {
                 "kind": "receipt",
                 "date": day(n),
                 "warehouse_id": main_wh["id"],
                 "currency": "UZS",
-                "note": "Yetkazib beruvchidan" if n != 62 else "Boshlangʻich kirim",
+                "supplier_id": suppliers[i % 2]["id"] if i else None,
+                "note": None if i else "Boshlangʻich kirim",
                 "lines": [
                     {
                         "product_id": p["id"],
@@ -220,6 +241,24 @@ async def seed(demo: Demo) -> None:
                     }
                     for p in products
                 ],
+            },
+        )
+        if i:
+            bought.append(doc)
+    # the oldest delivery is paid, the next one half paid, the latest still owed
+    for doc, part, n in ((bought[0], 1, 33), (bought[1], 0.5, 10)):
+        await demo.post(
+            "/supplier-payments",
+            {
+                "supplier_id": doc["supplier_id"],
+                "amount": (
+                    doc["total"]
+                    if part == 1
+                    else str(round(float(doc["total"]) * part, -3))
+                ),
+                "currency": "UZS",
+                "method": "transfer",
+                "date": day(n),
             },
         )
     await demo.post(

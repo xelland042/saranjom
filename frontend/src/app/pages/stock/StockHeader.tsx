@@ -13,7 +13,7 @@ export default function StockHeader() {
   const { t } = usePrefs()
   const can = useCan()
   const [warehouses, setWarehouses] = useState(false)
-  const tab = 'rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-(--text)'
+  const tab = 'rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-(--text)'
   return (
     <>
       <PageHeader
@@ -44,12 +44,15 @@ export default function StockHeader() {
           )
         }
       />
-      <nav className="rise mb-4 inline-flex gap-1 rounded-full glass-field p-1" style={{ '--i': 1 } as CSSProperties} aria-label={t('stock')}>
+      <nav className="rise mb-4 inline-flex max-w-full gap-1 overflow-x-auto rounded-full glass-field p-1" style={{ '--i': 1 } as CSSProperties} aria-label={t('stock')}>
         <Link to="/stock" activeOptions={{ exact: true, includeSearch: false }} className={tab} activeProps={{ className: 'bg-(--soft-2) text-(--text)', 'aria-current': 'page' }}>
           {t('balancesTab')}
         </Link>
         <Link to="/stock/documents" activeOptions={{ exact: true, includeSearch: false }} className={tab} activeProps={{ className: 'bg-(--soft-2) text-(--text)', 'aria-current': 'page' }}>
           {t('documentsTab')}
+        </Link>
+        <Link to="/stock/suppliers" activeOptions={{ exact: true, includeSearch: false }} className={tab} activeProps={{ className: 'bg-(--soft-2) text-(--text)', 'aria-current': 'page' }}>
+          {t('suppliers')}
         </Link>
       </nav>
       <WarehousesDialog open={warehouses} onOpenChange={setWarehouses} />

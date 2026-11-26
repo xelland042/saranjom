@@ -7,7 +7,8 @@ from app.core.database import SessionDep
 from app.core.xlsx import MAX_ROWS, xlsx
 from app.crud.activity import ActivityLog
 from app.crud.stock import StockManager
-from app.models import StockDocument, Warehouse
+from app.crud.suppliers import SupplierManager
+from app.models import StockDocument, Supplier, Warehouse
 from app.schemas.stock import (
     DocumentIn,
     DocumentOut,
@@ -42,6 +43,7 @@ def _log(session, current, doc: StockDocument, action: str) -> None:
 
 async def _out(m: StockManager, doc: StockDocument, with_negative: bool) -> DocumentOut:
     products = await m.products_of(doc)
+    supplier = doc.supplier_id and await m.session.get(Supplier, doc.supplier_id)
     return DocumentOut(
         id=doc.id,
         kind=doc.kind,
@@ -50,6 +52,10 @@ async def _out(m: StockManager, doc: StockDocument, with_negative: bool) -> Docu
         warehouse_id=doc.warehouse_id,
         to_warehouse_id=doc.to_warehouse_id,
         currency=doc.currency,
+        supplier_id=doc.supplier_id,
+        supplier_name=supplier.name if supplier else None,
+        total=doc.total,
+        exchange_rate=doc.exchange_rate,
         note=doc.note,
         cancelled=doc.cancelled,
         created_at=doc.created_at,
@@ -174,10 +180,13 @@ async def list_documents(
     session: SessionDep,
     current: CurrentUser,
     kind: Kind | None = None,
+    supplier_id: int | None = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
-    items, total = await _manager(session, current).documents(kind, limit, offset)
+    items, total = await _manager(session, current).documents(
+        kind, limit, offset, supplier_id
+    )
     return DocumentPage(items=items, total=total)
 
 
@@ -186,7 +195,13 @@ async def list_documents(
 )
 async def create_document(data: DocumentIn, session: SessionDep, current: CurrentUser):
     m = _manager(session, current)
-    doc = await m.create_document(data)
+    # a purchase in a foreign currency saves its rate, like an order
+    rate = (
+        await SupplierManager(session, current[1]).rate(data.currency)
+        if data.supplier_id is not None and data.currency
+        else None
+    )
+    doc = await m.create_document(data, rate)
     _log(session, current, doc, "created")
     return await _out(m, doc, with_negative=True)
 

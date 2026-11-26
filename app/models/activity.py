@@ -12,6 +12,8 @@ ENTITIES = (
     "product",
     "stock_document",
     "return",
+    "supplier",
+    "supplier_payment",
 )
 
 
