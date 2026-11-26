@@ -14,6 +14,7 @@ ENTITIES = (
     "return",
     "supplier",
     "supplier_payment",
+    "money_move",
 )
 
 

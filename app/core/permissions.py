@@ -153,6 +153,12 @@ ROUTES: dict[str, str | None] = {
     "POST /payments": "money.write",
     "GET /payments/{payment_id}": "money.read",
     "POST /payments/{payment_id}/cancel": "money.write",
+    # the cash box and the bank: every movement, and the ones that are nobody's payment
+    "GET /money": "money.read",
+    "GET /money/export": "money.read",
+    "POST /money-moves": "money.write",
+    "POST /money-moves/{move_id}/cancel": "money.write",
+    "GET /profit": "money.read",
     "GET /debts": "money.read",
     "GET /debts/export": "money.read",
     "GET /customers/{customer_id}/balances": "money.read",

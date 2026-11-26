@@ -29,13 +29,13 @@ import './auth.css'
 import './shell.css'
 
 // The sections. Each gets a colored tile like the app icons in the prototype.
-// `also`: another address that belongs to the same tile
+// `also`: other addresses that belong to the same tile
 // `need`: the permission a role must have to see the section
-type Section = { to: '/' | '/orders' | '/debts' | '/tasks' | '/customers' | '/products' | '/stock' | '/staff'; key: Key; icon: typeof Users; color: string; also?: string; need: Permission }
+type Section = { to: '/' | '/orders' | '/debts' | '/tasks' | '/customers' | '/products' | '/stock' | '/staff'; key: Key; icon: typeof Users; color: string; also?: string[]; need: Permission }
 const NAV: Section[] = [
   { to: '/', key: 'home', icon: LayoutDashboard, color: 'var(--violet)', need: 'dashboard' },
-  { to: '/orders', key: 'orders', icon: ShoppingCart, color: 'var(--green)', also: '/returns', need: 'orders.read' },
-  { to: '/debts', key: 'debts', icon: Wallet, color: 'var(--gold)', also: '/payments', need: 'money.read' },
+  { to: '/orders', key: 'orders', icon: ShoppingCart, color: 'var(--green)', also: ['/returns'], need: 'orders.read' },
+  { to: '/debts', key: 'debts', icon: Wallet, color: 'var(--gold)', also: ['/payments', '/cash', '/profit'], need: 'money.read' },
   { to: '/tasks', key: 'tasks', icon: CheckSquare, color: 'var(--blue)', need: 'tasks' },
   { to: '/customers', key: 'customers', icon: Users, color: 'var(--accent)', need: 'customers.read' },
   { to: '/products', key: 'products', icon: Package, color: 'var(--violet)', need: 'products.read' },
@@ -44,7 +44,7 @@ const NAV: Section[] = [
 // the section an address belongs to (the staff page isn't in the dock, only in the user menu)
 const STAFF: Section = { to: '/staff', key: 'staff', icon: UserCog, color: 'var(--accent)', need: 'staff' }
 const sectionOf = (path: string) =>
-  [...NAV, STAFF].find(({ to, also }) => [to, also].some((p) => p && (path === p || (p !== '/' && path.startsWith(`${p}/`)))))
+  [...NAV, STAFF].find(({ to, also }) => [to, ...(also ?? [])].some((p) => (path === p || (p !== '/' && path.startsWith(`${p}/`)))))
 
 const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform)
 const PHONE = '(max-width: 767px)'
@@ -275,7 +275,7 @@ export default function Shell({ me, children }: { me: Me; children: ReactNode })
 
         <nav className="sb-list" ref={list} onPointerMove={magnify} onPointerLeave={unmagnify} aria-label={t('mainNav')}>
           {sections.map(({ to, key, icon: Icon, color, also }) => {
-            const active = [to, also].some((p) => p && (path === p || (p !== '/' && path.startsWith(`${p}/`))))
+            const active = [to, ...(also ?? [])].some((p) => (path === p || (p !== '/' && path.startsWith(`${p}/`))))
             const count = to === '/tasks' ? due : 0
             return (
               <Link key={to} to={to} className="sb-row" data-active={active} aria-current={active ? 'page' : undefined} data-tip={t(key)} onClick={afterNavigate}>

@@ -21,6 +21,7 @@ SEES = {
     "return": "orders.read",
     "supplier": "stock.read",
     "supplier_payment": "money.read",
+    "money_move": "money.read",
 }
 
 

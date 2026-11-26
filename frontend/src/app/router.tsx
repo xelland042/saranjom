@@ -6,7 +6,9 @@ import Dashboard from './pages/home/Dashboard'
 import CustomerDetail from './pages/customers/CustomerDetail'
 import CustomerList from './pages/customers/CustomerList'
 import Debts, { type DebtSearch } from './pages/debts/Debts'
+import Cash from './pages/debts/Cash'
 import Payments from './pages/debts/Payments'
+import Profit from './pages/debts/Profit'
 import StatementPage, { type StatementSearch } from './pages/debts/StatementPage'
 import NotFound from './pages/NotFound'
 import Staff from './pages/staff/Staff'
@@ -22,6 +24,7 @@ import Documents from './pages/stock/Documents'
 import NewDocument from './pages/stock/NewDocument'
 import SupplierPage from './pages/stock/SupplierPage'
 import Suppliers from './pages/stock/Suppliers'
+import { MONEY_KINDS, PLACES, type MoneyKind, type Place } from './cash'
 import { METHODS, type Method } from './debts'
 import { STATUSES, type Status } from './orders'
 import { PRIORITIES, type Priority } from './tasks'
@@ -184,6 +187,25 @@ const payments = createRoute({
     sort: sortOf(s.sort, ['date', 'number', 'customer', 'amount']),
   }),
 })
+// ?place=cash&kind=expense&from=&to=
+const cash = createRoute({
+  getParentRoute: () => app,
+  path: '/cash',
+  component: Cash,
+  validateSearch: (s: Record<string, unknown>): { place?: Place; kind?: MoneyKind; from?: string; to?: string } => ({
+    place: PLACES.includes(s.place as Place) ? (s.place as Place) : undefined,
+    kind: MONEY_KINDS.includes(s.kind as MoneyKind) ? (s.kind as MoneyKind) : undefined,
+    from: isoDate(s.from),
+    to: isoDate(s.to),
+  }),
+})
+// ?from=&to= (this month when left out)
+const profit = createRoute({
+  getParentRoute: () => app,
+  path: '/profit',
+  component: Profit,
+  validateSearch: (s: Record<string, unknown>): { from?: string; to?: string } => ({ from: isoDate(s.from), to: isoDate(s.to) }),
+})
 
 // The design prototype, kept for reference while building real screens. Development builds only.
 const prototype = createRoute({
@@ -192,7 +214,7 @@ const prototype = createRoute({
   component: lazyRouteComponent(() => import('./pages/Prototype')),
 })
 
-const tree = root.addChildren([app.addChildren([home, orders, newOrder, order, salesReturn, debts, payments, tasks, customers, customer, statement, products, product, stock, stockDocuments, newStockDocument, stockDocument, suppliers, supplier, staff]), ...(import.meta.env.DEV ? [prototype] : [])])
+const tree = root.addChildren([app.addChildren([home, orders, newOrder, order, salesReturn, debts, payments, cash, profit, tasks, customers, customer, statement, products, product, stock, stockDocuments, newStockDocument, stockDocument, suppliers, supplier, staff]), ...(import.meta.env.DEV ? [prototype] : [])])
 
 // 'root': unknown addresses always use the root's not-found page, which keeps the login-or-app frame
 export const router = createRouter({ routeTree: tree, notFoundMode: 'root' })

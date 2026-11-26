@@ -4,6 +4,14 @@ from .user import Role, User
 from .auth import AuthSession, LoginFailure
 from .customer import Customer, CustomerContact
 from .rate import CbuRate, CompanyRate
+from .money import (
+    EXPENSES,
+    INCOMES,
+    MONEY_PLACES,
+    MOVE_KINDS,
+    OUTSIDE_PROFIT,
+    MoneyMove,
+)
 from .payment import PAYMENT_METHODS, OpeningBalance, Payment
 from .supplier import Supplier, SupplierPayment
 from .task import DEFAULT_STAGES, PRIORITIES, STAGE_COLORS, Task, TaskStage
@@ -55,6 +63,12 @@ __all__ = [
     "VatRate",
     "PAYMENT_METHODS",
     "OpeningBalance",
+    "EXPENSES",
+    "INCOMES",
+    "MONEY_PLACES",
+    "MOVE_KINDS",
+    "OUTSIDE_PROFIT",
+    "MoneyMove",
     "Payment",
     "Supplier",
     "SupplierPayment",

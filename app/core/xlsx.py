@@ -29,6 +29,9 @@ HEADERS: dict[str, tuple[str, str, str]] = {
     "date": ("Sana", "Сана", "Дата"),
     "customer": ("Mijoz", "Мижоз", "Клиент"),
     "supplier": ("Yetkazib beruvchi", "Етказиб берувчи", "Поставщик"),
+    "kind": ("Turi", "Тури", "Вид"),
+    "place": ("Qayerda", "Қаерда", "Где"),
+    "party": ("Kimdan / kimga", "Кимдан / кимга", "От кого / кому"),
     "status": ("Holat", "Ҳолат", "Статус"),
     "currency": ("Valyuta", "Валюта", "Валюта"),
     "total": ("Jami", "Жами", "Сумма"),
@@ -67,6 +70,34 @@ METHOD = {
     "transfer": ("Pul oʻtkazmasi", "Пул ўтказмаси", "Перечисление"),
     "card": ("Karta", "Карта", "Карта"),
     "online": ("Click / Payme", "Click / Payme", "Click / Payme"),
+}
+PLACE = {
+    "cash": ("Kassa", "Касса", "Касса"),
+    "bank": ("Bank", "Банк", "Банк"),
+}
+MONEY_KIND = {
+    "payment": ("Mijoz toʻlovi", "Мижоз тўлови", "Оплата от клиента"),
+    "payout": (
+        "Yetkazib beruvchiga toʻlov",
+        "Етказиб берувчига тўлов",
+        "Оплата поставщику",
+    ),
+    "expense": ("Xarajat", "Харажат", "Расход"),
+    "income": ("Boshqa kirim", "Бошқа кирим", "Прочий приход"),
+    "transfer": ("Oʻtkazma", "Ўтказма", "Перемещение"),
+}
+MONEY_CATEGORY = {
+    "rent": ("Ijara", "Ижара", "Аренда"),
+    "salary": ("Ish haqi", "Иш ҳақи", "Зарплата"),
+    "transport": ("Transport", "Транспорт", "Транспорт"),
+    "utilities": ("Kommunal toʻlovlar", "Коммунал тўловлар", "Коммунальные услуги"),
+    "taxes": ("Soliqlar", "Солиқлар", "Налоги"),
+    "bank_fee": ("Bank xizmati", "Банк хизмати", "Услуги банка"),
+    "marketing": ("Reklama", "Реклама", "Реклама"),
+    "other": ("Boshqa", "Бошқа", "Прочее"),
+    "owner_out": ("Egasi oldi", "Эгаси олди", "Изъятие владельца"),
+    "owner_in": ("Egasi kiritdi", "Эгаси киритди", "Вклад владельца"),
+    "opening": ("Boshlangʻich qoldiq", "Бошланғич қолдиқ", "Начальный остаток"),
 }
 
 

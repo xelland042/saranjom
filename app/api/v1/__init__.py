@@ -9,6 +9,7 @@ from .dashboard import router as dashboard_router
 from .imports import router as imports_router
 from .onec import router as onec_router
 from .orders import router as orders_router
+from .money import router as money_router
 from .payments import router as payments_router
 from .products import router as products_router
 from .rates import router as rates_router
@@ -33,6 +34,7 @@ for r in (
     orders_router,
     returns_router,
     payments_router,
+    money_router,
     tasks_router,
     activity_router,
     dashboard_router,

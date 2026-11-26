@@ -16,10 +16,12 @@ const queryClient: QueryClient = new QueryClient({
   queryCache: new QueryCache({ onError }),
   mutationCache: new MutationCache({
     onError,
-    // every change can add to a history and move the overview's numbers: refresh both
+    // every change can add to a history, move the overview's numbers and the money in the cash
+    // box or the bank (a payment in, a payment to a supplier): refresh them
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activity'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['cash'] })
     },
   }),
   defaultOptions: {

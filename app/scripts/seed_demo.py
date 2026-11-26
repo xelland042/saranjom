@@ -377,6 +377,39 @@ async def seed(demo: Demo) -> None:
             },
         )
 
+    # the cash box and the bank: what the company started with, two months of running costs
+    # (sized so the profit report comes out modestly positive), cash carried to the bank, and
+    # the owner's own money out. Each: kind, amount, place, days ago, category or where to, note
+    for kind, amount, place, n, what, note in (
+        ("income", 25_000_000, "cash", 62, "opening", None),
+        ("income", 320_000_000, "bank", 62, "opening", None),
+        ("expense", 3_000_000, "bank", 58, "rent", "Ombor ijarasi"),
+        ("expense", 6_000_000, "bank", 48, "salary", None),
+        ("expense", 350_000, "cash", 44, "transport", "Yoqilgʻi"),
+        ("expense", 450_000, "bank", 41, "utilities", None),
+        ("transfer", 8_000_000, "cash", 36, "bank", None),
+        ("expense", 3_000_000, "bank", 28, "rent", "Ombor ijarasi"),
+        ("expense", 1_900_000, "bank", 24, "taxes", None),
+        ("expense", 6_000_000, "bank", 18, "salary", None),
+        ("expense", 5_000_000, "cash", 15, "owner_out", None),
+        ("expense", 400_000, "cash", 11, "marketing", "Banner"),
+        ("transfer", 6_000_000, "cash", 9, "bank", None),
+        ("expense", 280_000, "cash", 5, "transport", "Yetkazib berish"),
+        ("expense", 60_000, "bank", 2, "bank_fee", None),
+    ):
+        await demo.post(
+            "/money-moves",
+            {
+                "kind": kind,
+                "amount": str(amount),
+                "place": place,
+                "currency": "UZS",
+                "date": day(n),
+                "note": note,
+                "to_place" if kind == "transfer" else "category": what,
+            },
+        )
+
     staff = await add_staff(demo)
     # the task board: a review column of their own, cards in every column
     stages = await demo.call("GET", "/task-stages")
