@@ -125,6 +125,7 @@ ROUTES: dict[str, str | None] = {
     "POST /stock-documents": "stock.write",
     "GET /stock-documents/{document_id}": "stock.read",
     "POST /stock-documents/{document_id}/cancel": "stock.write",
+    "POST /stock-counts": "stock.write",
     # suppliers belong to goods coming in; what we owe and pay them is money
     "GET /suppliers": "stock.read",
     "POST /suppliers": "stock.write",
@@ -159,6 +160,9 @@ ROUTES: dict[str, str | None] = {
     "POST /money-moves": "money.write",
     "POST /money-moves/{move_id}/cancel": "money.write",
     "GET /profit": "money.read",
+    # sales by product, customer and person; cost and profit only with money.read
+    "GET /reports/sales": "orders.read",
+    "GET /reports/sales/export": "orders.read",
     "GET /debts": "money.read",
     "GET /debts/export": "money.read",
     "GET /customers/{customer_id}/balances": "money.read",

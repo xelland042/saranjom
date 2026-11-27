@@ -324,6 +324,17 @@ async def seed(demo: Demo) -> None:
         {"amount": "2750000", "date": day(70)},
     )
 
+    # the manager enters part of the orders, so the sales report has two people in it
+    await add_staff(demo)
+    manager = Demo(
+        httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=main_app, client=("127.0.0.1", 2)),
+            base_url="https://demo",
+        )
+    )
+    await manager.post("/auth/login", {"login": STAFF[0][0], "password": PASSWORD})
+    who = random.Random(7)  # its own dice: the rest of the demo stays as it was
+
     # two months of sales: weekdays busier, the first customers the regulars
     weights = [8, 7, 6, 4, 6, 3, 4, 3, 4, 4, 2, 3]
     confirmed = []
@@ -341,7 +352,7 @@ async def seed(demo: Demo) -> None:
                 }
                 for p in picked
             ]
-            o = await demo.post(
+            o = await (manager if who.random() < 0.6 else demo).post(
                 "/orders", {"customer_id": c["id"], "date": day(n), "lines": lines}
             )
             if n <= 1 and rnd.random() < 0.5:
@@ -351,6 +362,8 @@ async def seed(demo: Demo) -> None:
                 await demo.call("POST", f"/orders/{o['id']}/cancel")
                 continue
             confirmed.append((n, c, o))
+
+    await manager.c.aclose()
 
     # money comes in: good payers on time, slow ones late and in part, bad ones barely
     methods = ["cash", "cash", "transfer", "transfer", "card", "online"]

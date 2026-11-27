@@ -58,6 +58,12 @@ HEADERS: dict[str, tuple[str, str, str]] = {
     "product": ("Mahsulot", "Маҳсулот", "Товар"),
     "payment_days": ("Toʻlov muddati (kun)", "Тўлов муддати (кун)", "Отсрочка (дней)"),
     "price": ("Narx", "Нарх", "Цена"),
+    "manager": ("Xodim", "Ходим", "Сотрудник"),
+    "quantity": ("Miqdor", "Миқдор", "Количество"),
+    "orders": ("Buyurtmalar", "Буюртмалар", "Заказы"),
+    "sales": ("Sotuv", "Сотув", "Продажи"),
+    "cost": ("Tannarx", "Таннарх", "Себестоимость"),
+    "profit": ("Foyda", "Фойда", "Прибыль"),
     "mxik": ("MXIK kodi", "МХИК коди", "Код МХИК (ИКПУ)"),
 }
 STATUS = {

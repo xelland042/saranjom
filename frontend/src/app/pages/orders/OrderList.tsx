@@ -3,7 +3,7 @@
 import { useState, type CSSProperties } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
-import { Percent, Plus, Search, ShoppingCart } from 'lucide-react'
+import { BarChart3, Percent, Plus, Search, ShoppingCart } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -159,6 +159,11 @@ export default function OrderList() {
                 <Percent aria-hidden="true" /> {t('vatRates')}
               </Button>
             )}
+            <Button asChild variant="outline">
+              <Link to="/orders/report">
+                <BarChart3 aria-hidden="true" /> {t('salesReport')}
+              </Link>
+            </Button>
             <ExportButton path="/orders/export" params={filters} />
             {newButton}
           </>

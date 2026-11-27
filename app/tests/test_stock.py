@@ -260,6 +260,93 @@ class StockApiTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(got, {str(self.flour["id"]): {str(self.main["id"]): "7.000"}})
 
+    async def _count(self, lines, code=201, client=None, **extra):
+        body = {
+            "warehouse_id": self.main["id"],
+            "lines": [
+                {"product_id": p["id"], "expected": e, "counted": c}
+                for p, e, c in lines
+            ],
+            **extra,
+        }
+        return await self._ok(
+            await (client or self.a).post(f"{API}/stock-counts", json=body), code
+        )
+
+    async def test_a_count_posts_only_the_differences(self):
+        oil = await self._product(self.a, "Yogʻ")
+        await self._doc("receipt", [(self.flour, "10"), (self.sugar, "5"), (oil, "3")])
+        await self._doc("receipt", [(self.flour, "4")], warehouse_id=self.shop["id"])
+        done = await self._count(
+            # 2 bags of flour missing, 1.5 of sugar found over, the oil is right
+            [(self.flour, "10", "8"), (self.sugar, "5", "6.5"), (oil, "3.000", "3")],
+            note="Sanoq",
+        )
+        self.assertEqual(
+            [(d["kind"], d["number"]) for d in done["documents"]],
+            [("receipt", 3), ("write_off", 1)],
+        )
+        stock = await self._stock(warehouse_id=self.main["id"])
+        self.assertEqual(
+            (
+                stock["Un 50 kg"]["total"],
+                stock["Shakar"]["total"],
+                stock["Yogʻ"]["total"],
+            ),
+            ("8.000", "6.500", "3.000"),
+        )
+        # the other warehouse is untouched
+        self.assertEqual((await self._stock())["Un 50 kg"]["total"], "12.000")
+        off = await self._ok(
+            await self.a.get(f"{API}/stock-documents/{done['documents'][1]['id']}")
+        )
+        self.assertEqual(
+            (off["note"], [(x["product_name"], x["quantity"]) for x in off["lines"]]),
+            ("Sanoq", [("Un 50 kg", "2.000")]),
+        )
+        # each is an ordinary document: cancelling it brings the old number back
+        await self._ok(await self.a.post(f"{API}/stock-documents/{off['id']}/cancel"))
+        stock = await self._stock(warehouse_id=self.main["id"])
+        self.assertEqual(stock["Un 50 kg"]["total"], "10.000")
+        # nothing differs: nothing is written
+        same = await self._count([(self.flour, "10", "10"), (oil, "3", "3")])
+        self.assertEqual(same["documents"], [])
+
+    async def test_a_count_fills_stock_that_was_below_zero(self):
+        await self._doc("write_off", [(self.flour, "3")])
+        done = await self._count([(self.flour, "-3", "2")])
+        self.assertEqual([d["kind"] for d in done["documents"]], ["receipt"])
+        stock = await self._stock(warehouse_id=self.main["id"])
+        self.assertEqual(stock["Un 50 kg"]["total"], "2.000")
+
+    async def test_a_count_against_stock_that_moved_is_refused(self):
+        await self._doc("receipt", [(self.flour, "10"), (self.sugar, "5")])
+        # sold or written off while the person was counting
+        await self._doc("write_off", [(self.flour, "1")])
+        got = await self._count(
+            [(self.flour, "10", "8"), (self.sugar, "5", "4")], code=409
+        )
+        self.assertEqual(got["detail"], {"moved": {str(self.flour["id"]): "9.000"}})
+        stock = await self._stock(warehouse_id=self.main["id"])
+        self.assertEqual(
+            (stock["Un 50 kg"]["total"], stock["Shakar"]["total"]), ("9.000", "5.000")
+        )
+
+    async def test_bad_counts_are_refused(self):
+        await self._doc("receipt", [(self.flour, "10")])
+        await self._count([(self.flour, "10", "-1")], code=422)
+        await self._count([(self.flour, "10", "8"), (self.flour, "10", "7")], code=422)
+        await self._count([], code=422)
+        await self._count([(self.flour, "10", "8")], code=422, warehouse_id=999999)
+        # another company's warehouse and product
+        theirs = await self._default_warehouse(self.b)
+        await self._count(
+            [(self.flour, "10", "8")], code=422, warehouse_id=theirs["id"]
+        )
+        await self._count([(self.flour, "0", "8")], code=422, client=self.b)
+        stock = await self._stock(warehouse_id=self.main["id"])
+        self.assertEqual(stock["Un 50 kg"]["total"], "10.000")
+
 
 if __name__ == "__main__":
     unittest.main()

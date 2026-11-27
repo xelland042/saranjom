@@ -14,11 +14,13 @@ import NotFound from './pages/NotFound'
 import Staff from './pages/staff/Staff'
 import Tasks from './pages/tasks/Tasks'
 import OrderList from './pages/orders/OrderList'
+import SalesReport from './pages/orders/SalesReport'
 import { ExistingOrder, NewOrder } from './pages/orders/OrderPage'
 import ReturnPage from './pages/orders/ReturnPage'
 import ProductList from './pages/products/ProductList'
 import ProductPage from './pages/products/ProductPage'
 import Balances from './pages/stock/Balances'
+import Count from './pages/stock/Count'
 import DocumentView from './pages/stock/DocumentView'
 import Documents from './pages/stock/Documents'
 import NewDocument from './pages/stock/NewDocument'
@@ -27,6 +29,7 @@ import Suppliers from './pages/stock/Suppliers'
 import { MONEY_KINDS, PLACES, type MoneyKind, type Place } from './cash'
 import { METHODS, type Method } from './debts'
 import { STATUSES, type Status } from './orders'
+import { REPORT_BY, type ReportBy } from './reports'
 import { PRIORITIES, type Priority } from './tasks'
 import { KINDS, type Kind, type Show } from './stock'
 
@@ -87,6 +90,13 @@ const stock = createRoute({
     show: s.show === 'positive' || s.show === 'negative' || s.show === 'low' ? s.show : undefined,
   }),
 })
+// ?warehouse=3: the count sheet of one warehouse (the default one when none is named)
+const stockCount = createRoute({
+  getParentRoute: () => app,
+  path: '/stock/count',
+  component: Count,
+  validateSearch: (s: Record<string, unknown>): { warehouse?: number } => ({ warehouse: positive(s.warehouse) }),
+})
 const stockDocuments = createRoute({
   getParentRoute: () => app,
   path: '/stock/documents',
@@ -133,6 +143,18 @@ const newOrder = createRoute({
   component: NewOrder,
   // ?customer=12: start the order for this customer
   validateSearch: (s: Record<string, unknown>): { customer?: number } => ({ customer: positive(s.customer) }),
+})
+// ?by=customer&from=2026-11-01&to=2026-11-26&sort=-profit
+const ordersReport = createRoute({
+  getParentRoute: () => app,
+  path: '/orders/report',
+  component: SalesReport,
+  validateSearch: (s: Record<string, unknown>): { by?: ReportBy; from?: string; to?: string; sort?: string } => ({
+    by: REPORT_BY.includes(s.by as ReportBy) && s.by !== 'product' ? (s.by as ReportBy) : undefined,
+    from: isoDate(s.from),
+    to: isoDate(s.to),
+    sort: sortOf(s.sort, ['name', 'orders', 'quantity', 'sales', 'profit']),
+  }),
 })
 const order = createRoute({ getParentRoute: () => app, path: '/orders/$orderId', component: ExistingOrder })
 const salesReturn = createRoute({ getParentRoute: () => app, path: '/returns/$returnId', component: ReturnPage })
@@ -214,7 +236,7 @@ const prototype = createRoute({
   component: lazyRouteComponent(() => import('./pages/Prototype')),
 })
 
-const tree = root.addChildren([app.addChildren([home, orders, newOrder, order, salesReturn, debts, payments, cash, profit, tasks, customers, customer, statement, products, product, stock, stockDocuments, newStockDocument, stockDocument, suppliers, supplier, staff]), ...(import.meta.env.DEV ? [prototype] : [])])
+const tree = root.addChildren([app.addChildren([home, orders, newOrder, ordersReport, order, salesReturn, debts, payments, cash, profit, tasks, customers, customer, statement, products, product, stock, stockCount, stockDocuments, newStockDocument, stockDocument, suppliers, supplier, staff]), ...(import.meta.env.DEV ? [prototype] : [])])
 
 // 'root': unknown addresses always use the root's not-found page, which keeps the login-or-app frame
 export const router = createRouter({ routeTree: tree, notFoundMode: 'root' })

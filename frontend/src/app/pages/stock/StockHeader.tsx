@@ -2,7 +2,7 @@
 // and documents.
 import { useState, type CSSProperties } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowLeftRight, MinusCircle, PlusCircle, Warehouse as WarehouseIcon } from 'lucide-react'
+import { ArrowLeftRight, ClipboardCheck, MinusCircle, PlusCircle, Warehouse as WarehouseIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '../../Page'
 import { usePrefs } from '../../prefs'
@@ -24,6 +24,11 @@ export default function StockHeader() {
           <>
             <Button variant="outline" onClick={() => setWarehouses(true)}>
               <WarehouseIcon aria-hidden="true" /> {t('warehouses')}
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/stock/count">
+                <ClipboardCheck aria-hidden="true" /> {t('stockCount')}
+              </Link>
             </Button>
             <Button asChild variant="outline">
               <Link to="/stock/documents/new" search={{ kind: 'transfer' }}>

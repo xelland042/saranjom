@@ -54,12 +54,10 @@ from app.schemas.imports import (
 )
 from app.schemas.payment import OpeningIn
 from app.schemas.product import CategoryIn, ProductIn, ProductPatch
-from app.schemas.stock import DocumentIn, LineIn
 
 MAX_BYTES = 5 * 1024 * 1024
 # unpacked, an .xlsx is XML many times its size; a small file that unpacks huge is a zip bomb
 MAX_UNPACKED = 100 * 1024 * 1024
-DOC_LINES = 500  # a stock document's limit (DocumentIn)
 
 # our field -> its header key in app/core/xlsx.py (the template's headers, in three languages)
 FIELDS = {
@@ -392,7 +390,7 @@ class Importer:
         m = ProductManager(self.session, self.tenant.id)
         stock = StockManager(self.session, self.tenant.id, self.user_id)
         if data.warehouse_id is not None:
-            await stock._check_warehouse("warehouse_id", data.warehouse_id)
+            await stock.check_warehouse("warehouse_id", data.warehouse_id)
         price_list = await self.session.scalar(
             select(PriceList).where(PriceList.is_default)
         )
@@ -534,37 +532,14 @@ class Importer:
         wanted: dict[int, Decimal],
         result: ImportResult,
     ) -> None:
-        """A receipt for what's missing and a write-off for what's over, so the warehouse holds
-        what the file says however many times it's imported."""
-        have = await stock.balances(list(wanted), data.warehouse_id)
-        diffs = {
-            pid: q - have.get(pid, {}).get(data.warehouse_id, Decimal(0))
-            for pid, q in wanted.items()
-        }
-        for kind, sign in (("receipt", 1), ("write_off", -1)):
-            lines = [
-                LineIn(product_id=pid, quantity=d * sign)
-                for pid, d in diffs.items()
-                if d * sign > 0
-            ]
-            for start in range(0, len(lines), DOC_LINES):
-                doc = await stock.create_document(
-                    DocumentIn(
-                        kind=kind,
-                        date=data.date,
-                        warehouse_id=data.warehouse_id,
-                        note=data.note,
-                        lines=lines[start : start + DOC_LINES],
-                    )
-                )
-                self.log.add(
-                    "stock_document",
-                    doc.id,
-                    "created",
-                    kind=doc.kind,
-                    number=doc.number,
-                )
-                result.stock.append(StockDoc(id=doc.id, kind=kind, number=doc.number))
+        """The warehouse is brought to what the file says however many times it's imported."""
+        for doc in await stock.set_stock(
+            data.warehouse_id, wanted, data.date, data.note
+        ):
+            self.log.add(
+                "stock_document", doc.id, "created", kind=doc.kind, number=doc.number
+            )
+            result.stock.append(StockDoc(id=doc.id, kind=doc.kind, number=doc.number))
 
 
 def _error(row: int, field: str, code: str, other: int | None) -> RowError:

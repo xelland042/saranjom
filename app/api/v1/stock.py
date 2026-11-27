@@ -10,6 +10,8 @@ from app.crud.stock import StockManager
 from app.crud.suppliers import SupplierManager
 from app.models import StockDocument, Supplier, Warehouse
 from app.schemas.stock import (
+    CountIn,
+    CountOut,
     DocumentIn,
     DocumentOut,
     DocumentPage,
@@ -223,3 +225,29 @@ async def cancel_document(document_id: int, session: SessionDep, current: Curren
     if not was_cancelled:
         _log(session, current, doc, "cancelled")
     return await _out(m, doc, with_negative=True)
+
+
+@router.post("/stock-counts", response_model=CountOut, status_code=201)
+async def count_stock(data: CountIn, session: SessionDep, current: CurrentUser):
+    """Brings a warehouse to what was counted: a receipt for what was found over and a
+    write-off for what is missing, so each can be read and cancelled like any document.
+    409 with the products whose stock moved since the person saw it (a sale confirmed
+    meanwhile): they look at the new numbers and send again."""
+    m = _manager(session, current)
+    await m.check_warehouse("warehouse_id", data.warehouse_id)
+    moved = await m.moved_since(
+        data.warehouse_id, {line.product_id: line.expected for line in data.lines}
+    )
+    if moved:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            {"moved": {str(pid): str(q) for pid, q in moved.items()}},
+        )
+    docs = await m.set_stock(
+        data.warehouse_id,
+        {line.product_id: line.counted for line in data.lines},
+        note=data.note,
+    )
+    for doc in docs:
+        _log(session, current, doc, "created")
+    return CountOut(documents=docs)

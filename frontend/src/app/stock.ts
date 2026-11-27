@@ -52,6 +52,8 @@ export type DocumentFields = {
   lines: { product_id: number; quantity: string; price: string | null }[]
 }
 export type Show = 'all' | 'positive' | 'negative' | 'low'
+export type CountDoc = { id: number; kind: Kind; number: number }
+export type CountFields = { warehouse_id: number; note: string; lines: { product_id: number; expected: string; counted: string }[] }
 
 const PAGE = 50
 const nextPage = <P extends { items: unknown[]; total: number }>(last: P, pages: P[]) => {
@@ -80,6 +82,22 @@ export const stockList = (q: string, warehouseId: number | undefined, show: Show
     initialPageParam: 0,
     getNextPageParam: nextPage,
     placeholderData: keepPreviousData,
+  })
+
+// Every active product with what one warehouse holds, for a stock count: all of them, page by page.
+export const countSheet = (warehouseId: number) =>
+  queryOptions({
+    queryKey: ['stock', 'count', warehouseId],
+    queryFn: async () => {
+      const rows: StockRow[] = []
+      for (;;) {
+        const page = await api<{ items: StockRow[]; total: number }>(
+          `/stock?${new URLSearchParams({ warehouse_id: String(warehouseId), limit: '200', offset: String(rows.length) })}`,
+        )
+        rows.push(...page.items)
+        if (rows.length >= page.total || page.items.length === 0) return rows
+      }
+    },
   })
 
 export const documentList = (kind: Kind | undefined) =>
@@ -121,6 +139,11 @@ export function useStockMutations() {
     }),
     createDocument: useMutation({
       mutationFn: (f: DocumentFields) => api<StockDocument>('/stock-documents', f),
+      onSuccess: refresh,
+    }),
+    // the differences become a receipt and a write-off; 409 when stock moved since it was shown
+    count: useMutation({
+      mutationFn: (f: CountFields) => api<{ documents: CountDoc[] }>('/stock-counts', f),
       onSuccess: refresh,
     }),
     cancelDocument: useMutation({

@@ -125,3 +125,36 @@ class StockRow(BaseModel):
 class StockPage(BaseModel):
     items: list[StockRow]
     total: int
+
+
+class CountLine(BaseModel):
+    product_id: int
+    # what the screen showed as in stock while the person counted (may be below zero)
+    expected: Annotated[Decimal, Field(max_digits=18, decimal_places=3)]
+    counted: Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=3)]
+
+
+class CountIn(BaseModel):
+    """A stock count: what was found on the shelves of one warehouse, for the products counted."""
+
+    warehouse_id: int
+    note: Note = None
+    lines: list[CountLine] = Field(min_length=1, max_length=5000)
+
+    @field_validator("lines")
+    @classmethod
+    def _once_each(cls, lines: list[CountLine]):
+        if len({line.product_id for line in lines}) != len(lines):
+            raise ValueError("A product is counted twice")
+        return lines
+
+
+class CountDoc(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    kind: Kind
+    number: int
+
+
+class CountOut(BaseModel):
+    documents: list[CountDoc]  # the differences; empty when everything matched

@@ -1,4 +1,5 @@
 from collections import defaultdict
+import datetime as dt
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -33,7 +34,7 @@ from app.models import (
     Supplier,
     Warehouse,
 )
-from app.schemas.stock import DocumentIn, WarehouseIn, WarehousePatch
+from app.schemas.stock import DocumentIn, LineIn, WarehouseIn, WarehousePatch
 
 DEFAULT_WAREHOUSE = {
     "uz": "Asosiy ombor",
@@ -41,6 +42,7 @@ DEFAULT_WAREHOUSE = {
     "ru": "Основной склад",
 }
 ZERO = Decimal("0.000")
+DOC_LINES = 500  # a stock document's limit (DocumentIn)
 CENT = Decimal("0.01")
 
 
@@ -388,14 +390,14 @@ class StockManager:
         self, data: DocumentIn, exchange_rate: Decimal | None = None
     ) -> StockDocument:
         """`exchange_rate`: for a purchase in a foreign currency, the rate to save on it."""
-        await self._check_warehouse("warehouse_id", data.warehouse_id)
+        await self.check_warehouse("warehouse_id", data.warehouse_id)
         if data.kind == "transfer":
             if (
                 data.to_warehouse_id is None
                 or data.to_warehouse_id == data.warehouse_id
             ):
                 raise InvalidField("to_warehouse_id", "Choose another warehouse")
-            await self._check_warehouse("to_warehouse_id", data.to_warehouse_id)
+            await self.check_warehouse("to_warehouse_id", data.to_warehouse_id)
         elif data.to_warehouse_id is not None:
             raise InvalidField("to_warehouse_id", "Only transfers have a target")
         has_prices = any(line.price is not None for line in data.lines)
@@ -464,6 +466,52 @@ class StockManager:
         await self.session.flush()
         return doc
 
+    async def set_stock(
+        self,
+        warehouse_id: int,
+        wanted: dict[int, Decimal],
+        date: dt.date | None = None,
+        note: str | None = None,
+    ) -> list[StockDocument]:
+        """Brings these products to these quantities in a warehouse (an Excel import, a stock
+        count): a receipt for what's missing and a write-off for what's over, never an edit.
+        """
+        have = await self.balances(list(wanted), warehouse_id)
+        diffs = {
+            pid: q - have.get(pid, {}).get(warehouse_id, Decimal(0))
+            for pid, q in wanted.items()
+        }
+        docs = []
+        for kind, sign in (("receipt", 1), ("write_off", -1)):
+            lines = [
+                LineIn(product_id=pid, quantity=d * sign)
+                for pid, d in diffs.items()
+                if d * sign > 0
+            ]
+            for start in range(0, len(lines), DOC_LINES):
+                docs.append(
+                    await self.create_document(
+                        DocumentIn(
+                            kind=kind,
+                            date=date,
+                            warehouse_id=warehouse_id,
+                            note=note,
+                            lines=lines[start : start + DOC_LINES],
+                        )
+                    )
+                )
+        return docs
+
+    async def moved_since(
+        self, warehouse_id: int, expected: dict[int, Decimal]
+    ) -> dict[int, Decimal]:
+        """Of these products, those whose stock is no longer what the person saw: product id ->
+        what it is now. A count typed against old numbers would post the wrong differences.
+        """
+        have = await self.balances(list(expected), warehouse_id)
+        now = {pid: have.get(pid, {}).get(warehouse_id, ZERO) for pid in expected}
+        return {pid: q for pid, q in now.items() if q != expected[pid]}
+
     async def cancel_document(self, doc: StockDocument) -> StockDocument:
         if not doc.cancelled:
             doc.cancelled_at = datetime.now(UTC)
@@ -517,7 +565,7 @@ class StockManager:
         ).returning(DocumentCounter.last)
         return (await self.session.execute(stmt)).scalar_one()
 
-    async def _check_warehouse(self, field: str, warehouse_id: int) -> None:
+    async def check_warehouse(self, field: str, warehouse_id: int) -> None:
         found = await self.session.scalar(
             select(Warehouse.id).where(
                 and_(Warehouse.id == warehouse_id, Warehouse.archived_at.is_(None))

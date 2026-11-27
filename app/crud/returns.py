@@ -81,7 +81,7 @@ class ReturnManager:
         if day < order.date:
             raise InvalidField("date", "A return can't come before its order")
         warehouse_id = data.warehouse_id or order.warehouse_id
-        await self.stock._check_warehouse("warehouse_id", warehouse_id)
+        await self.stock.check_warehouse("warehouse_id", warehouse_id)
         sold = {line.id: line for line in order.lines}
         ids = [line.order_line_id for line in data.lines]
         if len(set(ids)) != len(ids) or not set(ids) <= set(sold):

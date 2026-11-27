@@ -12,6 +12,7 @@ from .orders import router as orders_router
 from .money import router as money_router
 from .payments import router as payments_router
 from .products import router as products_router
+from .reports import router as reports_router
 from .rates import router as rates_router
 from .returns import router as returns_router
 from .staff import roles_router, router as staff_router
@@ -35,6 +36,7 @@ for r in (
     returns_router,
     payments_router,
     money_router,
+    reports_router,
     tasks_router,
     activity_router,
     dashboard_router,
