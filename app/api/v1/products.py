@@ -82,6 +82,7 @@ async def export_products(
             ("category", "text"),
             ("stock", "qty"),
             ("min_stock", "qty"),
+            ("cost", "money"),
             *[("price", "money", f"{pl.name}, {pl.currency}") for pl in lists],
         ],
         [
@@ -93,6 +94,7 @@ async def export_products(
                 names.get(p["category_id"]),
                 p["stock"],
                 p["min_stock"],
+                p["cost"],
                 *[
                     next(
                         (

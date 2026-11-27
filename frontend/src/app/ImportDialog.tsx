@@ -45,6 +45,7 @@ const FIELDS: Record<Kind, { field: string; label: Key }[]> = {
     { field: 'category', label: 'category' },
     { field: 'mxik', label: 'mxik' },
     { field: 'price', label: 'price' },
+    { field: 'cost', label: 'costShort' },
     { field: 'quantity', label: 'importStock' },
   ],
 }

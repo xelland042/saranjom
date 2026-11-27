@@ -1,10 +1,11 @@
 # Saranjom
 
-An open-source sales, stock and debts system for small wholesale and distribution companies in
+An open-source sales, stock and money system for small wholesale and distribution companies in
 Uzbekistan. *Saranjom* is Uzbek for "tidy, everything in its place".
 
-It covers what a wholesaler does every day and leaves the bookkeeping to 1C: a period's sales,
-returns and payments go to the accountant as one file.
+It covers what a wholesaler does every day: selling, buying, stock, debts, the cash box and the
+bank, and what was earned. Statutory accounting stays in 1C: a period's sales, returns and payments
+go to the accountant as one file.
 
 **Status:** early. The modules below work and are tested, but no company runs its business on it
 yet. Expect changes.
@@ -17,6 +18,8 @@ yet. Expect changes.
 |---|---|
 | ![An order with its lines, discounts, VAT and history](.github/screenshots/order.jpg) An order | ![Debts per customer with overdue amounts](.github/screenshots/debts.jpg) Debts |
 | ![The task board with the company's own columns](.github/screenshots/tasks.jpg) Tasks | ![The customer list in the light look](.github/screenshots/customers-light.jpg) Customers, in the light look |
+| ![What is in the cash box and the bank, and every movement of money](.github/screenshots/cash.jpg) Cash and bank | ![A month's sales less the cost of the goods less expenses](.github/screenshots/profit.jpg) Profit |
+| ![A month's sales by product with cost, profit and margin](.github/screenshots/sales-report.jpg) Sales report | ![A stock count: what the books say next to what was found](.github/screenshots/stock-count.jpg) Stock count |
 
 The screens show a made-up demo company.
 
@@ -27,18 +30,26 @@ The screens show a made-up demo company.
 - **Products and prices:** categories, units, МХИК codes, several price lists in any currency, one
   per customer if needed.
 - **Stock:** warehouses, receipts, write-offs and transfers as numbered documents, balances per
-  warehouse.
+  warehouse, and a stock count that writes only the differences and prints as a count sheet.
+- **Suppliers and purchases:** a receipt from a supplier is a purchase; what you owe each supplier
+  and paying it.
 - **Orders:** drafts, confirmation that takes stock, discounts, VAT by date, saved exchange rates,
   a printable invoice.
 - **Payments and debts:** debts per customer and currency, overdue amounts, credit limits, opening
   debts, a printable akt sverki.
 - **Returns:** part or all of an order, back into stock, with the debt lowered at the order's own
   prices.
+- **Cash and bank:** what is in the cash box and the bank per currency, every movement of money in
+  one list, expenses, and transfers between the two.
+- **Profit:** a period's sales less what the sold goods cost less expenses. Cost is the average
+  purchase price, or a cost typed on the product for goods that arrived without one.
+- **Sales report:** a period's sales by product, by customer or by the person who entered the
+  order, with cost, profit and margin.
 - **Tasks:** a board with your own columns, priorities, due days, links to customers and orders.
 - **Staff and roles:** each company defines its roles and what each one sees and changes; every
   route is checked on the server.
-- **Excel import:** customers and products from a firm's own file or a 1C list, with a preview of
-  what will change.
+- **Excel import:** customers (with opening debts) and products (with prices, cost and stock) from
+  a firm's own file or a 1C list, with a preview of what will change.
 - **1C export:** an EnterpriseData file (1.4, 1.5 or 1.8) that «1С:Бухгалтерия» loads.
 - **Overview:** a dashboard, a history of every change, sortable and filterable lists, Excel files.
 

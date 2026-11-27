@@ -36,6 +36,7 @@ const FIELD: Record<string, Key> = {
   category_id: 'category',
   mxik: 'mxik',
   min_stock: 'minStock',
+  cost: 'costShort',
   prices: 'prices',
 }
 // changes shown with their values; the others (ids, prices) by name only

@@ -44,6 +44,7 @@ class ProductRowIn(BaseModel):
     category: Cell = None
     mxik: Cell = None
     price: Cell = None
+    cost: Cell = None
     quantity: Cell = None
 
 

@@ -50,6 +50,15 @@ class GuessTest(unittest.TestCase):
             guess(["Товар", "Цена продажи, сум", "Остаток"], "products"),
             {"name": 0, "price": 1, "quantity": 2},
         )
+        # what it was bought at isn't what it sells at
+        self.assertEqual(
+            guess(["Товар", "Закупочная цена, сум", "Цена", "Tannarx"], "products"),
+            {"name": 0, "cost": 3, "price": 2},
+        )
+        self.assertEqual(
+            guess(["Товар", "Закупочная цена, сум", "Цена продажи"], "products"),
+            {"name": 0, "cost": 1, "price": 2},
+        )
 
 
 class ParsingTest(unittest.TestCase):
@@ -288,6 +297,31 @@ class ImportTest(unittest.IsolatedAsyncioTestCase):
         again = await self._post("/import/products", body, 200)
         self.assertEqual((again["created"], again["unchanged"]), (0, 2))
         self.assertEqual(again["stock"], [])
+
+    async def test_products_cost_column(self):
+        rows = [
+            {"row": 2, "name": "Un", "cost": "8 500,5"},
+            {"row": 3, "name": "Tuz", "cost": "-1"},
+        ]
+        body = {"rows": rows, "dry_run": False}
+        done = await self._post("/import/products", body, 200)
+        self.assertEqual(done["created"], 1)
+        self.assertEqual(
+            [(e["row"], e["field"], e["code"]) for e in done["errors"]],
+            [(3, "cost", "invalid")],
+        )
+        find = {"params": {"q": "un"}}
+        products = await self._ok(await self.c.get(f"{API}/products", **find))
+        self.assertEqual(
+            [(p["name"], p["cost"]) for p in products["items"]], [("Un", "8500.50")]
+        )
+        again = await self._post("/import/products", body, 200)
+        self.assertEqual((again["created"], again["unchanged"]), (0, 1))
+        # an empty cell never clears a cost
+        rows[0]["cost"] = " "
+        await self._post("/import/products", body, 200)
+        products = await self._ok(await self.c.get(f"{API}/products", **find))
+        self.assertEqual(products["items"][0]["cost"], "8500.50")
 
     async def test_debts_and_stock_need_their_own_permission(self):
         role = await self._post(

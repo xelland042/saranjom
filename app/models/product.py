@@ -83,6 +83,9 @@ class Product(TenantMixin, Base):
     note: Mapped[str | None]
     # below this in all warehouses together, the product shows as running low; none: no alert
     min_stock: Mapped[Decimal | None] = mapped_column(Numeric(18, 3))
+    # what one unit cost, in the company's currency, typed by a person: counts for goods that
+    # arrived without a price (an imported opening stock) and when nothing arrived at all
+    cost: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
     name_key: Mapped[str]
     search: Mapped[str]
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

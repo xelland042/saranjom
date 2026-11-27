@@ -14,7 +14,7 @@ import { ApiError, invalidFields } from '../../api'
 import Field from '../../Field'
 import { currencyLabel, formatAmount, formatDecimal, parseAmount, parsePositive } from '../../money'
 import { usePrefs } from '../../prefs'
-import { categoriesQuery, priceListsQuery, UNITS, useEquivalent, useProductMutations, type Product, type Unit } from '../../products'
+import { categoriesQuery, priceListsQuery, ratesQuery, UNITS, useEquivalent, useProductMutations, type Product, type Unit } from '../../products'
 
 type Props = { open: boolean; onOpenChange: (open: boolean) => void; product?: Product; showEquivalent?: boolean }
 
@@ -42,6 +42,7 @@ function Body({ product, showEquivalent, close }: { product?: Product; showEquiv
   const lists = useQuery(priceListsQuery)
   const activeLists = (lists.data ?? []).filter((l) => !l.archived)
   const equivalent = useEquivalent()
+  const base = useQuery(ratesQuery).data?.base // the company's currency: the cost is in it
 
   const [f, setF] = useState({
     name: product?.name ?? '',
@@ -54,6 +55,7 @@ function Body({ product, showEquivalent, close }: { product?: Product; showEquiv
   })
   // the reorder point, typed as text; empty means no alert
   const [minStock, setMinStock] = useState(product?.min_stock ? formatDecimal(product.min_stock) : '')
+  const [cost, setCost] = useState(product?.cost ? formatAmount(product.cost) : '')
   // typed prices by price list, and which non-default lists have a row (the default always has one)
   const [prices, setPrices] = useState<Record<number, string>>(() =>
     Object.fromEntries((product?.prices ?? []).map((p) => [p.price_list_id, formatAmount(p.amount)])),
@@ -110,6 +112,8 @@ function Body({ product, showEquivalent, close }: { product?: Product; showEquiv
     if (!f.name.trim()) bad.add('name')
     const min = minStock.trim() ? (minStock.trim() === '0' ? '0' : parsePositive(minStock, 3)) : null
     if (min === undefined) bad.add('min_stock')
+    const unitCost = parseAmount(cost)
+    if (unitCost === undefined) bad.add('cost')
     // every active list is sent: a row's price, or null to remove a price whose row was taken away
     const parsed = activeLists.map((l) => {
       const amount = rowLists.includes(l) ? parseAmount(prices[l.id] ?? '') : null
@@ -119,7 +123,7 @@ function Body({ product, showEquivalent, close }: { product?: Product; showEquiv
     if (bad.size) return setInvalid(bad)
     setFailed(false)
     save.mutate(
-      { id: product?.id, ...f, min_stock: min ?? null, prices: parsed },
+      { id: product?.id, ...f, min_stock: min ?? null, cost: unitCost ?? null, prices: parsed },
       {
         onSuccess: (saved) => {
           toast.success(t('saved'))
@@ -288,6 +292,9 @@ function Body({ product, showEquivalent, close }: { product?: Product; showEquiv
         </fieldset>
       )}
 
+      <Field id="product-cost" label={t('costShort')} optional={t('optional')} hint={t('costHint')} error={invalid.has('cost') && t('invalidPrice')}>
+        <PriceInput value={cost} currency={base ? currencyLabel(base, lang) : ''} onChange={(v) => (setCost(v), clear('cost'))} />
+      </Field>
       <Field id="product-min" label={t('minStock')} optional={t('optional')} hint={t('minStockHint')} error={invalid.has('min_stock') && t('invalidQuantity')}>
         <Input value={minStock} onChange={(e) => (setMinStock(e.target.value), clear('min_stock'))} inputMode="decimal" maxLength={20} autoComplete="off" className="text-right tabular-nums sm:w-40" />
       </Field>

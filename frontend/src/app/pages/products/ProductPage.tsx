@@ -13,7 +13,7 @@ import { formatDay, localDate } from '../../dates'
 import { formatDecimal, formatMoney } from '../../money'
 import { EmptyState, PageHeader } from '../../Page'
 import { usePrefs } from '../../prefs'
-import { categoriesQuery, movementsQuery, priceListsQuery, productQuery, useEquivalent, useProductMutations, type Movement, type Product } from '../../products'
+import { categoriesQuery, movementsQuery, priceListsQuery, productQuery, ratesQuery, useEquivalent, useProductMutations, type Movement, type Product } from '../../products'
 import { balancesQuery, KIND_LABEL, warehousesQuery } from '../../stock'
 import Timeline from '../../Timeline'
 import { Tile } from '../stock/Balances'
@@ -72,6 +72,7 @@ function Loaded({ product: p }: { product: Product }) {
   const category = useQuery(categoriesQuery).data?.find((c) => c.id === p.category_id)
   const moves = useQuery(movementsQuery(p.id))
   const equivalent = useEquivalent()
+  const base = useQuery(ratesQuery).data?.base
   const unit = t(`unit_${p.unit}`)
   const total = Object.values(per).reduce((s, q) => s + Number(q), 0)
   const low = p.min_stock !== null && total < Number(p.min_stock)
@@ -154,6 +155,7 @@ function Loaded({ product: p }: { product: Product }) {
                   l.id,
                 )
               })}
+            {row(t('costShort'), p.cost && base && <span className="tabular-nums">{formatMoney(p.cost, base, lang)}</span>)}
             {row(t('sku'), p.sku)}
             {row(t('barcode'), p.barcode && <span className="tabular-nums">{p.barcode}</span>)}
             {row(t('unit'), unit)}

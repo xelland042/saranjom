@@ -72,6 +72,17 @@ test('the profit report: sales less the cost of the goods less expenses, and wha
   await expect(row(t('profitNet'))).toContainText(amount(300_000))
   // the product sold without a cost is named, with what it sold for
   const warning = page.getByRole('status').filter({ hasText: t('uncostedTitle') })
-  await expect(warning.getByRole('link', { name: shop.product.name })).toBeVisible()
   await expect(warning).toContainText(amount(150_000))
+
+  // its cost typed on the product: the goods that came without a price count at it
+  await warning.getByRole('link', { name: shop.product.name }).click()
+  await page.getByRole('button', { name: t('edit') }).click()
+  await page.getByRole('dialog').getByLabel(t('costShort')).fill('9000')
+  await page.getByRole('dialog').getByRole('button', { name: t('save') }).click()
+  await expect(toast(page, t('saved'))).toBeVisible()
+  await expect(page.locator('dt', { hasText: t('costShort') }).locator('..')).toContainText(amount(9_000))
+  await page.goto('/profit')
+  await expect(row(t('profitCost'))).toContainText(amount(490_000))
+  await expect(row(t('profitNet'))).toContainText(amount(210_000))
+  await expect(warning).toHaveCount(0)
 })

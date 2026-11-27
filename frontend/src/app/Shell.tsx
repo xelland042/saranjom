@@ -35,7 +35,7 @@ type Section = { to: '/' | '/orders' | '/debts' | '/tasks' | '/customers' | '/pr
 const NAV: Section[] = [
   { to: '/', key: 'home', icon: LayoutDashboard, color: 'var(--violet)', need: 'dashboard' },
   { to: '/orders', key: 'orders', icon: ShoppingCart, color: 'var(--green)', also: ['/returns'], need: 'orders.read' },
-  { to: '/debts', key: 'debts', icon: Wallet, color: 'var(--gold)', also: ['/payments', '/cash', '/profit'], need: 'money.read' },
+  { to: '/debts', key: 'money', icon: Wallet, color: 'var(--gold)', also: ['/payments', '/cash', '/profit'], need: 'money.read' },
   { to: '/tasks', key: 'tasks', icon: CheckSquare, color: 'var(--blue)', need: 'tasks' },
   { to: '/customers', key: 'customers', icon: Users, color: 'var(--accent)', need: 'customers.read' },
   { to: '/products', key: 'products', icon: Package, color: 'var(--violet)', need: 'products.read' },

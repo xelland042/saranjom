@@ -137,6 +137,8 @@ class ProductsApiTest(unittest.IsolatedAsyncioTestCase):
             {"name": "X", "prices": [{"price_list_id": main["id"], "amount": "1.005"}]},
             {"name": "X", "prices": [{"price_list_id": 999999999, "amount": "1"}]},
             {"name": "X", "category_id": 999999999},
+            {"name": "X", "cost": "-1"},
+            {"name": "X", "cost": "1.005"},
         ]:
             r = await self.a.post(f"{API}/products", json=body)
             self.assertEqual(r.status_code, 422, body)

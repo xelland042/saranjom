@@ -108,13 +108,13 @@ export default function Cash() {
   return (
     <>
       <MoneyHeader />
-      <div className="rise mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" style={{ '--i': 2 } as CSSProperties} aria-busy={list.isPending || undefined}>
+      <div className="rise mb-4 grid gap-3 sm:grid-cols-[repeat(auto-fill,minmax(17rem,1fr))]" style={{ '--i': 2 } as CSSProperties} aria-busy={list.isPending || undefined}>
         {balances.map((b) => (
           <section key={`${b.place}-${b.currency}`} className="glass flex items-center gap-3 p-4" aria-label={`${t(PLACE_LABEL[b.place])}, ${currencyLabel(b.currency, lang)}`}>
             <Tile icon={b.place === 'cash' ? Wallet : Landmark} color={b.place === 'cash' ? 'var(--gold)' : 'var(--accent)'} />
             <div className="min-w-0">
               <p className="text-sm text-muted-foreground">{t(PLACE_LABEL[b.place])}</p>
-              <p className={`truncate text-lg font-semibold tabular-nums ${Number(b.amount) < 0 ? 'text-red' : ''}`}>{formatMoney(b.amount, b.currency, lang)}</p>
+              <p className={`text-lg font-semibold tabular-nums ${Number(b.amount) < 0 ? 'text-red' : ''}`}>{formatMoney(b.amount, b.currency, lang)}</p>
             </div>
           </section>
         ))}

@@ -1,7 +1,7 @@
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
-from sqlalchemy import func, or_, select, union_all
+from sqlalchemy import case, func, or_, select, union_all
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
@@ -23,13 +23,26 @@ ZERO = Decimal("0.00")
 
 def unit_costs(currency: str, until: date):
     """What one unit of each product cost, in the company's currency: (product_id, cost), the
-    average price of its priced receipts up to `until`, weighted by quantity. A receipt in
-    another currency counts at its saved rate; one without a rate (not a purchase) is left out.
+    average price of its receipts up to `until`, weighted by quantity. A receipt in another
+    currency counts at its saved rate. A line with no price (or no rate: not a purchase) counts
+    at the cost typed on the product, and is left out when none is typed; a product with nothing
+    to average has its typed cost, or no row at all.
     shortcut: one average per product, so a period's profit moves a little when a later
     delivery inside it costs more; count by batch (FIFO) if owners need exact margins.
+    shortcut: the typed cost has no date, so changing it reprices the past too; keep its
+    history if owners compare old months after correcting a cost.
     """
-    value = StockLine.price * func.coalesce(StockDocument.exchange_rate, 1)
-    return (
+    paid = case(
+        (
+            or_(
+                StockDocument.currency == currency,
+                StockDocument.exchange_rate.is_not(None),
+            ),
+            StockLine.price * func.coalesce(StockDocument.exchange_rate, 1),
+        )
+    )
+    value = func.coalesce(paid, Product.cost)
+    received = (
         select(
             StockLine.product_id,
             (func.sum(StockLine.quantity * value) / func.sum(StockLine.quantity)).label(
@@ -37,17 +50,21 @@ def unit_costs(currency: str, until: date):
             ),
         )
         .join(StockDocument, StockDocument.id == StockLine.document_id)
+        .join(Product, Product.id == StockLine.product_id)
         .where(
             StockDocument.kind == "receipt",
             StockDocument.cancelled_at.is_(None),
             StockDocument.date <= until,
-            StockLine.price.is_not(None),
-            or_(
-                StockDocument.currency == currency,
-                StockDocument.exchange_rate.is_not(None),
-            ),
+            value.is_not(None),
         )
         .group_by(StockLine.product_id)
+        .subquery("received")
+    )
+    cost = func.coalesce(received.c.cost, Product.cost)
+    return (
+        select(Product.id.label("product_id"), cost.label("cost"))
+        .outerjoin(received, received.c.product_id == Product.id)
+        .where(cost.is_not(None))
         .subquery("cost")
     )
 

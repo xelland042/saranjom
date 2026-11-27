@@ -20,8 +20,8 @@ export default function MoneyHeader() {
   return (
     <>
       <PageHeader
-        title={t('debts')}
-        description={t('debtsIntro')}
+        title={t('money')}
+        description={t('moneyIntro')}
         actions={
           <>
             {can('orders.read') && (
@@ -37,7 +37,7 @@ export default function MoneyHeader() {
           </>
         }
       />
-      <nav className="rise mb-4 inline-flex max-w-full gap-1 overflow-x-auto rounded-full glass-field p-1" style={{ '--i': 1 } as CSSProperties} aria-label={t('debts')}>
+      <nav className="rise mb-4 inline-flex max-w-full gap-1 overflow-x-auto rounded-full glass-field p-1" style={{ '--i': 1 } as CSSProperties} aria-label={t('money')}>
         <Link to="/debts" activeOptions={{ exact: true, includeSearch: false }} className={tab} activeProps={active}>
           {t('debtsTab')}
         </Link>

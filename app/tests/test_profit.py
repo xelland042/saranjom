@@ -187,6 +187,36 @@ class ProfitApiTest(unittest.IsolatedAsyncioTestCase):
             },
         )
 
+    async def test_a_typed_cost_stands_in_where_no_price_was_entered(self):
+        await self._receive(self.sugar, "10", None)
+        await self._sell(self.sugar, "2", "80")
+        self.assertEqual((await self._profit())["uncosted"]["count"], 1)
+        r = await self.a.patch(
+            f"{API}/products/{self.sugar['id']}", json={"cost": "50"}
+        )
+        self.assertEqual((await self._ok(r))["cost"], "50.00")
+        p = await self._profit()
+        self.assertEqual((p["cost"], p["uncosted"]["count"]), ("100.00", 0))
+        # a priced delivery joins the unpriced one in the average: (10 x 50 + 10 x 70) / 20
+        await self._receive(self.sugar, "10", "70")
+        self.assertEqual((await self._profit())["cost"], "120.00")
+        # one that never arrived (sold below zero) has its typed cost alone
+        oil = await self._post("/products", {"name": "Yogʻ", "cost": "30"})
+        await self._sell(oil, "3", "40")
+        p = await self._profit()
+        self.assertEqual((p["cost"], p["uncosted"]["count"]), ("210.00", 0))
+        # the sales report counts the same way
+        report = await self._get(
+            "/reports/sales", date_from=self._day(10), date_to=self._day(0)
+        )
+        self.assertEqual((report["cost"], report["sales"]), (p["cost"], p["sales"]))
+        # taken away again, the goods that came without a price are unknown again
+        r = await self.a.patch(
+            f"{API}/products/{self.sugar['id']}", json={"cost": None}
+        )
+        self.assertIsNone((await self._ok(r))["cost"])
+        self.assertEqual((await self._profit())["cost"], "230.00")  # 2 x 70 + 3 x 30
+
     async def test_only_the_period_counts_and_cancelled_things_do_not(self):
         await self._receive(self.flour, "100", "100", ago=40)
         await self._sell(self.flour, "1", "150", ago=30)

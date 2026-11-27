@@ -75,6 +75,7 @@ class ProductIn(BaseModel):
     mxik: Mxik = None
     note: Note = None
     min_stock: MinStock | None = None
+    cost: Amount | None = None  # per unit, in the company's currency
     prices: list[PriceIn] = []
 
 
@@ -89,6 +90,7 @@ class ProductPatch(BaseModel):
     mxik: Mxik = None
     note: Note = None
     min_stock: MinStock | None = None
+    cost: Amount | None = None
     archived: bool | None = None
     prices: list[PriceIn] = []
 
@@ -110,6 +112,7 @@ class ProductOut(BaseModel):
     mxik: str | None
     note: str | None
     min_stock: Decimal | None
+    cost: Decimal | None
     archived: bool
     updated_at: datetime
     prices: list[PriceOut]

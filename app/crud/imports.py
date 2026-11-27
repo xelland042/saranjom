@@ -77,6 +77,7 @@ FIELDS = {
         "category": "category",
         "mxik": "mxik",
         "price": "price",
+        "cost": "cost",
         "quantity": "stock",
     },
 }
@@ -104,6 +105,9 @@ SYNONYMS = {
         "unit": ["Единица измерения", "Ед. изм.", "Ед.", "Единица", "Birlik",
                  "O'lchov birligi", "Unit"],
         "category": ["Категория", "Группа", "Kategoriya", "Guruh", "Category", "Group"],
+        # before the price: "Закупочная цена, сум" holds the word "цена" too
+        "cost": ["Закупочная цена", "Цена закупки", "Цена поступления", "Kirim narxi",
+                 "Cost", "Cost price"],
         "price": ["Цена", "Narx", "Price", "Цена продажи", "Оптовая цена"],
         "quantity": ["Остаток", "Количество", "Кол-во", "Qoldiq", "Miqdor",
                      "Quantity", "Stock", "Конечный остаток"],
@@ -428,6 +432,8 @@ class Importer:
                     if unit is None:
                         raise RowFailed("unit", "unit")
                     cells["unit"] = unit
+                if "cost" in cells:
+                    cells["cost"] = _number(cells["cost"], "cost")
                 if quantity is not None:
                     if data.warehouse_id is None:
                         raise InvalidField("warehouse_id", "Choose a warehouse")

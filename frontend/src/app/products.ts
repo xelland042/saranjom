@@ -18,6 +18,7 @@ export type Product = {
   mxik: string | null
   note: string | null
   min_stock: string | null // below this in all warehouses together: running low
+  cost: string | null // per unit, in the company's currency: for goods that arrived without a price
   archived: boolean
   updated_at: string
   prices: Price[]
@@ -46,6 +47,7 @@ export type ProductFields = {
   mxik: string
   note: string
   min_stock: string | null
+  cost: string | null
   // null removes the price in that list
   prices: { price_list_id: number; amount: string | null }[]
 }

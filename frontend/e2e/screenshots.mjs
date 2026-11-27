@@ -38,4 +38,15 @@ await shot('order', `/orders/${orders.items[0].id}`)
 await shot('debts', '/debts')
 await shot('tasks', '/tasks')
 await shot('customers-light', '/customers', 'light')
+await shot('cash', '/cash')
+await shot('profit', '/profit')
+await shot('sales-report', '/orders/report')
+// a count under way: the first products typed in, two of them off
+const warehouse = (await (await page.request.get('/api/v1/warehouses')).json()).find(w => w.is_default)
+const stock = await (await page.request.get(`/api/v1/stock?warehouse_id=${warehouse.id}&limit=8`)).json()
+const typed = Object.fromEntries(
+  stock.items.map((r, i) => [r.product_id, String(Number(r.quantities[warehouse.id] ?? 0) + ({ 2: -3, 5: 2 }[i] ?? 0))]),
+)
+await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [`stock-count:${warehouse.id}`, JSON.stringify(typed)])
+await shot('stock-count', `/stock/count?warehouse=${warehouse.id}`)
 await browser.close()
