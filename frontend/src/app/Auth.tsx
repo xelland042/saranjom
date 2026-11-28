@@ -252,7 +252,7 @@ function Banner({ tab, last }: { tab: Tab; last: LastUser | null }) {
 
 // ---------- screen ----------
 
-export default function Auth() {
+export default function Auth({ demo = false }: { demo?: boolean }) {
   const { look, lang, t } = usePrefs()
   const qc = useQueryClient()
   const onAuthed = (me: Me) => qc.setQueryData(meQuery.queryKey, me)
@@ -278,6 +278,19 @@ export default function Auth() {
       if (!reducedMotion()) {
         card?.animate([0, -8, 7, -5, 3, 0].map((x) => ({ translate: `${x}px 0` })), { duration: 380, easing: 'ease-out' })
       }
+    }
+  }
+
+  // into the demo company as its guest; not remembered as "the last user" of this browser
+  async function seeDemo() {
+    setBusy(true)
+    setError(null)
+    try {
+      await api('/auth/demo', {})
+      onAuthed(await api<Me>('/auth/me'))
+    } catch (err) {
+      setError(errorKey(err))
+      setBusy(false)
     }
   }
 
@@ -346,6 +359,15 @@ export default function Auth() {
                 </form>
               </TabsContent>
             </Tabs>
+
+            {demo && (
+              <div className="grid gap-1.5 border-t border-(--line) pt-5">
+                <Button type="button" variant="outline" disabled={busy} onClick={seeDemo}>
+                  <Eye aria-hidden="true" /> {t('seeDemo')}
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">{t('seeDemoHint')}</p>
+              </div>
+            )}
 
             {error && (
               <p role="alert" className="flex items-start gap-2 rounded-2xl bg-red/10 px-3.5 py-2.5 text-sm text-red">

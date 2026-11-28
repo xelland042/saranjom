@@ -69,6 +69,24 @@ async def login(
     return {}
 
 
+@router.get("/demo")
+async def demo_available():
+    """Whether the login screen should offer the demo."""
+    return {"available": bool(settings.auth.demo_login)}
+
+
+@router.post("/demo")
+async def demo_login(request: Request, response: Response, session: SessionDep):
+    """Into the demo company as its guest, who can look at everything and change nothing."""
+    _throttle(request)
+    try:
+        token = await AuthManager(session).demo_login()
+    except LoginFailed:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No demo here") from None
+    _set_cookie(response, token)
+    return {}
+
+
 @router.post("/logout")
 async def logout(request: Request, response: Response, session: SessionDep):
     token = request.cookies.get(settings.auth.cookie_name)

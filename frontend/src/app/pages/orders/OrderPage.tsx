@@ -548,8 +548,8 @@ function View({ order }: { order: Order }) {
             </ul>
           </section>
         )}
-        <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
-          <CustomerTasks customer={{ id: order.customer_id, name: order.customer_name }} order={{ id: order.id, number: order.number }} />
+        <div className={`mt-4 grid items-start gap-4 ${can('tasks') ? 'lg:grid-cols-2' : ''}`}>
+          {can('tasks') && <CustomerTasks customer={{ id: order.customer_id, name: order.customer_name }} order={{ id: order.id, number: order.number }} />}
           <section className="glass rise p-5" style={{ '--i': 5 } as CSSProperties}>
             <Timeline scope={{ entity: 'order', entityId: order.id }} title={t('history')} />
           </section>

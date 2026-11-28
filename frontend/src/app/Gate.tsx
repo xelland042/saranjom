@@ -5,11 +5,14 @@ import Auth from './Auth'
 import Backdrop from './Backdrop'
 import Shell from './Shell'
 import { usePrefs } from './prefs'
-import { useMe } from './session'
+import { useQuery } from '@tanstack/react-query'
+import { demoQuery, useMe } from './session'
 
 // Decides between the login screen and the app, for every address, including unknown ones.
 export default function Gate({ children = <Outlet /> }: { children?: ReactNode }) {
   const me = useMe()
+  // asked alongside, so the login card is drawn once, with or without its demo button
+  const demo = useQuery(demoQuery)
   const { look, t } = usePrefs()
   if (me.isPending) return null
   if (me.isError) {
@@ -24,7 +27,7 @@ export default function Gate({ children = <Outlet /> }: { children?: ReactNode }
       </div>
     )
   }
-  if (!me.data) return <Auth />
+  if (!me.data) return demo.isPending ? null : <Auth demo={demo.data === true} />
   return (
     <Shell me={me.data}>{children}</Shell>
   )

@@ -50,6 +50,8 @@ services:
       MAIN_CONFIG__DB__URL: postgresql+asyncpg://open_erp_app:${DB_APP_PASSWORD}@db:5432/open_erp
       # the demo company's password, for `run --rm api python -m app.scripts.seed_demo`
       DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+      # set only on a public demo: the guest anyone may enter as without a password
+      MAIN_CONFIG__AUTH__DEMO_LOGIN: ${DEMO_LOGIN:-}
     depends_on:
       migrate:
         condition: service_completed_successfully

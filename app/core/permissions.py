@@ -29,6 +29,9 @@ GRANTABLE = tuple(p for p in PERMISSIONS if p != "staff")
 IMPLIES = {p: p.replace(".write", ".read") for p in PERMISSIONS if p.endswith(".write")}
 IMPLIES["tasks.columns"] = "tasks"
 
+# looking only: what the demo's guest may hold (app/crud/auth.py). "tasks" also changes them
+VIEW_ONLY = frozenset(p for p in PERMISSIONS if p.endswith(".read")) | {"dashboard"}
+
 # the roles a new company starts with, named in the sign-up language; the owner role always has
 # every permission, so new ones reach it without a migration
 DEFAULT_ROLES: dict[str, dict[str, str]] = {

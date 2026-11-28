@@ -36,6 +36,8 @@ export const T = {
   goodNight: ['Xayrli tun', 'Хайрли тун', 'Доброй ночи'],
   createCompany: ['Kompaniyangizni bir daqiqada yarating', 'Компаниянгизни бир дақиқада яратинг', 'Создайте компанию за минуту'],
   notYou: ['Siz emasmisiz?', 'Сиз эмасмисиз?', 'Это не вы?'],
+  seeDemo: ['Demoni koʻrish', 'Демони кўриш', 'Посмотреть демо'],
+  seeDemoHint: ['Roʻyxatdan oʻtmasdan: namuna kompaniya, faqat koʻrish uchun', 'Рўйхатдан ўтмасдан: намуна компания, фақат кўриш учун', 'Без регистрации: демо-компания, только просмотр'],
   customers: ['Mijozlar', 'Мижозлар', 'Клиенты'],
   customersIntro: ['Kompaniyangiz bilan ishlaydigan firmalar va ularning xodimlari', 'Компаниянгиз билан ишлайдиган фирмалар ва уларнинг ходимлари', 'Компании, с которыми вы работаете, и их сотрудники'],
   noCustomers: ['Hali mijozlar yoʻq', 'Ҳали мижозлар йўқ', 'Клиентов пока нет'],

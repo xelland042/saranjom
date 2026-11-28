@@ -12,22 +12,28 @@ Demo logins, all with the password demo-12345 (development only: a server sets i
 DEMO_PASSWORD):
     demo (owner), menejer (manager), omborchi (storekeeper), buxgalter (accountant)
 Run on a database where the demo company exists, it adds any of these people still missing.
+
+There is also a guest, mehmon, who sees everything and changes nothing, with a password nobody
+knows. On a public demo, MAIN_CONFIG__AUTH__DEMO_LOGIN=mehmon (DEMO_LOGIN in the server's .env)
+puts a "see the demo" button on the login screen that lets anyone in as the guest.
 """
 
 import asyncio
 import os
 import random
+import secrets
 from datetime import timedelta
 
 import httpx
 
 from app.core.clock import today
 from app.core.database import db_helper
-from app.core.permissions import DEFAULT_ROLES
+from app.core.permissions import DEFAULT_ROLES, VIEW_ONLY
 from app.main import main_app
 
 API = "/api/v1"
 LOGIN = "demo"
+GUEST = "mehmon"
 PASSWORD = os.environ.get("DEMO_PASSWORD") or "demo-12345"
 TODAY = today()  # the app's day (Tashkent), like the documents it makes
 rnd = random.Random(20261120)  # the same demo every run
@@ -575,6 +581,26 @@ async def add_staff(demo: Demo) -> dict[str, int]:
         if r.status_code not in (201, 409):
             raise SystemExit(f"adding {login} failed: {r.status_code} {r.text}")
     people = await demo.call("GET", "/staff")
+    if not any(p["username"] == GUEST for p in people):
+        # the role may be there from a run that stopped halfway
+        roles = {r["name"]: r["id"] for r in await demo.call("GET", "/roles")}
+        role_id = (
+            roles.get("Mehmon")
+            or (
+                await demo.post(
+                    "/roles", {"name": "Mehmon", "permissions": sorted(VIEW_ONLY)}
+                )
+            )["id"]
+        )
+        await demo.post(
+            "/staff",
+            {
+                "name": "Mehmon",
+                "login": GUEST,
+                "password": secrets.token_urlsafe(24),
+                "role_id": role_id,
+            },
+        )
     return {p["username"]: p["id"] for p in people if p["username"]}
 
 

@@ -10,7 +10,8 @@ go to the accountant as one file.
 **Status:** early. The modules below work and are tested, but no company runs its business on it
 yet. Expect changes.
 
-**Try it:** [saranjom.uz](https://saranjom.uz). Sign up and you get your own empty company.
+**Try it:** [saranjom.uz](https://saranjom.uz). "Demoni koʻrish" on the login screen opens a demo
+company to look around, no sign-up needed; signing up gives you your own empty company.
 
 ![The dashboard: sales today and this month, debts, 30 days of sales, tasks due, stock running low](.github/screenshots/dashboard.jpg)
 

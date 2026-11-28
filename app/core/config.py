@@ -45,6 +45,9 @@ class AuthConfig(BaseModel):
     # minute (an office or a phone network can sit behind one address, so not too low)
     signups_per_hour: int = 10
     requests_per_minute: int = 30
+    # a public demo: the login of a person anyone may enter as, with no password, from the
+    # login screen's "see the demo" button. Only works while their role can change nothing.
+    demo_login: str | None = None
 
 
 class TracingConfig(BaseModel):

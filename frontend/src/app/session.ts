@@ -19,6 +19,14 @@ export const meQuery = queryOptions({
 
 export const useMe = () => useQuery(meQuery)
 
+// Whether this server has a demo company anyone may look around (the login screen's button).
+export const demoQuery = queryOptions({
+  queryKey: ['demo'],
+  queryFn: () => api<{ available: boolean }>('/auth/demo').then((d) => d.available).catch(() => false),
+  staleTime: Infinity,
+  retry: false,
+})
+
 export function useLogout() {
   const qc = useQueryClient()
   return async () => {

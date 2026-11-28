@@ -6,6 +6,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.core.database import db_helper
+from app.core.permissions import VIEW_ONLY
 from app.core.rls import set_tenant
 from app.core.security import (
     DUMMY_HASH,
@@ -78,6 +79,28 @@ class AuthManager:
         ok = await run_in_threadpool(verify_password, password, stored)
         if not (ok and row and row.password_hash and row.is_active):
             await self._record_failure(login, ip)
+            raise LoginFailed
+        return await self._start_session(row.id, row.tenant_id)
+
+    async def demo_login(self) -> str:
+        """A session for the demo's guest (`settings.auth.demo_login`), with no password: for a
+        public demo company. Refused unless that person's role only looks, so a wrong setting
+        can't open an account that changes anything."""
+        login = settings.auth.demo_login
+        row = (
+            login
+            and (
+                await self.session.execute(
+                    text("SELECT * FROM auth_find_user(:login)"),
+                    {"login": login.lower()},
+                )
+            ).first()
+        )
+        if not (row and row.is_active):
+            raise LoginFailed
+        await set_tenant(self.session, row.tenant_id)
+        user = await self.session.get(User, row.id)
+        if user is None or not user.role.granted <= VIEW_ONLY:
             raise LoginFailed
         return await self._start_session(row.id, row.tenant_id)
 

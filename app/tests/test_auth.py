@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import httpx
 
+from app.core.clock import today
 from app.core.config import settings
 from app.core.database import db_helper
 from app.main import main_app
@@ -172,6 +173,78 @@ class AuthFlowTest(unittest.IsolatedAsyncioTestCase):
                 f"{API}/login", json={"login": phone, "password": "fresh-pass"}
             )
         self.assertEqual((old.status_code, new.status_code), (401, 200))
+
+    async def _guest(self, permissions, login):
+        """A person of the client's company with a role of these permissions."""
+        role = await self.client.post(
+            "/api/v1/roles", json={"name": "Mehmon", "permissions": permissions}
+        )
+        self.assertEqual(role.status_code, 201, role.text)
+        r = await self.client.post(
+            "/api/v1/staff",
+            json={
+                "name": "Mehmon",
+                "login": login,
+                "password": "nobody-knows-1",
+                "role_id": role.json()["id"],
+            },
+        )
+        self.assertEqual(r.status_code, 201, r.text)
+        return r.json()
+
+    async def test_the_demo_lets_anyone_in_as_its_guest_who_only_looks(self):
+        visitor = self._client()
+        # no demo set up: the login screen offers none and the door is shut
+        self.assertEqual(
+            (await visitor.get(f"{API}/demo")).json(), {"available": False}
+        )
+        self.assertEqual((await visitor.post(f"{API}/demo")).status_code, 404)
+
+        await self._signup(self.client, random_phone())
+        login = f"guest{random_phone()[5:]}"
+        guest = await self._guest(["customers.read", "money.read", "dashboard"], login)
+        with patch.object(settings.auth, "demo_login", login.upper()):
+            self.assertEqual(
+                (await visitor.get(f"{API}/demo")).json(), {"available": True}
+            )
+            self.assertEqual((await visitor.post(f"{API}/demo")).status_code, 200)
+            me = (await visitor.get(f"{API}/me")).json()
+            self.assertEqual((me["id"], me["owner"]), (guest["id"], False))
+            # looking works, changing doesn't
+            r = await visitor.get("/api/v1/customers")
+            self.assertEqual(r.status_code, 200)
+            # the overview keeps the company's tasks from a role that doesn't see tasks
+            r = await self.client.post(
+                "/api/v1/tasks", json={"title": "Call", "due_date": str(today())}
+            )
+            self.assertEqual(r.status_code, 201, r.text)
+            ours = (await self.client.get("/api/v1/dashboard")).json()["tasks"]
+            self.assertEqual((ours["today"], len(ours["items"])), (1, 1))
+            theirs = (await visitor.get("/api/v1/dashboard")).json()["tasks"]
+            self.assertEqual(theirs, {"overdue": 0, "today": 0, "items": []})
+            r = await visitor.post("/api/v1/customers", json={"name": "X"})
+            self.assertEqual(r.status_code, 403)
+            # turned off by the owner, the guest is no way in
+            await visitor.post(f"{API}/logout")
+            r = await self.client.patch(
+                f"/api/v1/staff/{guest['id']}", json={"active": False}
+            )
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual((await visitor.post(f"{API}/demo")).status_code, 404)
+        await visitor.aclose()
+
+    async def test_the_demo_never_opens_an_account_that_can_change_things(self):
+        phone = random_phone()
+        await self._signup(self.client, phone)
+        login = f"guest{random_phone()[5:]}"
+        await self._guest(["customers.read", "customers.write"], login)
+        async with self._client() as visitor:
+            # the owner, a role that changes customers, a login nobody has
+            for name in (phone, login, "nobody-here"):
+                with patch.object(settings.auth, "demo_login", name):
+                    r = await visitor.post(f"{API}/demo")
+                    self.assertEqual(r.status_code, 404, name)
+                    self.assertEqual((await visitor.get(f"{API}/me")).status_code, 401)
 
     async def test_guessing_the_current_password_is_limited(self):
         await self._signup(self.client, random_phone())

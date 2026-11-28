@@ -17,6 +17,8 @@ export MAIN_CONFIG__DB__URL="postgresql+asyncpg://open_erp_app:open_erp_app@$PG/
 export MAIN_CONFIG__DB__MIGRATION_URL="postgresql+asyncpg://open_erp:open_erp@$PG/$DB"
 # every test signs up and logs in from this one machine: the per-address limits would stop them
 export MAIN_CONFIG__AUTH__SIGNUPS_PER_HOUR=100000 MAIN_CONFIG__AUTH__REQUESTS_PER_MINUTE=100000
+# the guest one test makes, for the login screen's demo button
+export MAIN_CONFIG__AUTH__DEMO_LOGIN=e2emehmon
 # quiet when it works; the whole output when it doesn't
 log="$(mktemp)"
 (cd "$ROOT/app" && $PY -m alembic upgrade head >"$log" 2>&1) || { cat "$log"; exit 1; }

@@ -108,6 +108,7 @@ function Loaded({ d }: { d: Data }) {
   const { t, lang } = usePrefs()
   const money = (v: string, c = d.currency) => formatMoney(v, c, lang)
   const today = isoToday()
+  const can = useCan()
   const [taskDialog, setTaskDialog] = useState<{ open: boolean; task?: Task }>({ open: false })
   // this month so far against the same days of last month
   const month = Number(d.sales.month)
@@ -172,11 +173,11 @@ function Loaded({ d }: { d: Data }) {
         />
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className={`grid items-start gap-4 ${can('tasks') ? 'lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]' : ''}`}>
         <section className="glass rise p-5" style={{ '--i': 5 } as CSSProperties}>
           <SalesChart days={d.daily} currency={d.currency} />
         </section>
-        <Block i={6} title={t('tasksDue')} to="/tasks" more={t('allTasks')}>
+        {can('tasks') && <Block i={6} title={t('tasksDue')} to="/tasks" more={t('allTasks')}>
           {d.tasks.items.length ? (
             <TaskRows tasks={d.tasks.items} onOpen={(task) => setTaskDialog({ open: true, task })} />
           ) : (
@@ -184,7 +185,7 @@ function Loaded({ d }: { d: Data }) {
               <CheckSquare className="size-4" aria-hidden="true" /> {t('noTasksDue')}
             </p>
           )}
-        </Block>
+        </Block>}
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-3">
@@ -271,7 +272,7 @@ function Loaded({ d }: { d: Data }) {
           )}
         </Block>
       </div>
-      <TaskDialog open={taskDialog.open} task={taskDialog.task} onOpenChange={(open) => setTaskDialog({ ...taskDialog, open })} />
+      {can('tasks') && <TaskDialog open={taskDialog.open} task={taskDialog.task} onOpenChange={(open) => setTaskDialog({ ...taskDialog, open })} />}
     </div>
   )
 }

@@ -28,7 +28,7 @@ class Dashboard:
         self.tenant = tenant
         self.user_id = user_id
 
-    async def build(self) -> dict:
+    async def build(self, with_tasks: bool = True) -> dict:
         day = today()
         month = month_start(day)
         # the same stretch of last month (1st to today's day number), to compare like with like
@@ -91,9 +91,13 @@ class Dashboard:
         overdue_count = (await debts.page(DebtFilters(overdue=True), 1, 0))[1]
 
         tasks = TaskManager(self.session, self.tenant.id, self.user_id)
-        task_summary = await tasks.summary()
-        open_tasks, _ = await tasks.page("open", None, None, 6, 0)
-        due_tasks = [t for t in open_tasks if t["due_date"] and t["due_date"] <= day]
+        task_summary, due_tasks = {"overdue": 0, "today": 0}, []
+        if with_tasks:
+            task_summary = await tasks.summary()
+            open_tasks, _ = await tasks.page("open", None, None, 6, 0)
+            due_tasks = [
+                t for t in open_tasks if t["due_date"] and t["due_date"] <= day
+            ]
 
         totals_q = stock_totals()
         stock = func.coalesce(totals_q.c.total, 0)
